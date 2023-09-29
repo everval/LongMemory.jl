@@ -19,12 +19,8 @@ fractional difference filter. See [Jensen and Nielsen (2014)](https://onlinelibr
 julia> fracdiff(randn(100,1),0.4)
 ```
 """
-function fracdiff(x,d)
-    T,c = size(x)
-
-    if c > 1
-        error("x must be a column vector")
-    end
+function fracdiff(x::Array,d)
+    T = length(x)
 
     np2 = nextpow(2,2*T-1)
     k = 1:(T-1)
@@ -55,12 +51,8 @@ Generate long memory by using the moving average representation of the cross-sec
 julia> csadiff(randn(100,1),1.2,1.4)
 ```
 """
-function csadiff(x,p,q)
-    T,c = size(x)
-
-    if c > 1
-        error("x must be a column vector")
-    end
+function csadiff(x::Array,p,q)
+    T = length(x)
 
     np2 = nextpow(2,2*T-1)
     coefs = ( beta.(p.+(0:T-1),q) ./ beta(p,q) ).^(1/2);
