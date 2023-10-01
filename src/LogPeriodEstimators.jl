@@ -67,7 +67,7 @@ function gph_est(x::Array;m=0.5,l=0,br=0::Int)
     w = w[first:last]
 
     Y = log.(I_w)
-    X = [-2*log.(w) w.^[0:2:(2*br)...]']  
+    X = [-2*log.(w) w.^collect(0:2:(2*br))']  
     β = X\Y
 
     return β[1]
