@@ -1,14 +1,19 @@
-using FFTW
+using FFTW, Optim
 
 export periodogram, gph_est
 
+
 """
-    periodogram(x)
+    periodogram(x::Array)
 
 Compute the periodogram of a time series `x` using the fast Fourier transform.
 
 # Arguments
 - `x::Vector`: time series
+
+# Output
+- `I_w::Vector`: periodogram
+- `w::Vector`: Fourier frequencies
 
 # Examples
 ```julia-repl
@@ -28,8 +33,9 @@ function periodogram(x::Array)
     return I_w, w
 end
 
+
 """
-    gph_est(x;m=0.5,l=0,br=0)
+    gph_est(x::Array; m=0.5, l=0, br=0::Int)
 
 Estimate the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -51,7 +57,7 @@ The default value of `br` is 0 which returns the original GPH log-periodogram es
 julia> gph_est(randn(100,1))
 ```
 """
-function gph_est(x::Array;m=0.5,l=0,br=0::Int)
+function gph_est(x::Array; m=0.5, l=0, br=0::Int)
     T = length(x)
 
     if m < l
@@ -71,4 +77,84 @@ function gph_est(x::Array;m=0.5,l=0,br=0::Int)
     β = X\Y
 
     return β[1]
+end
+
+
+"""
+    whittle_llk(d, x::Array; m=0.5, l=0)
+
+Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See XXX for details.
+
+# Arguments
+- `d::Float64`: long memory parameter
+- `x::Vector`: time series
+- `m∈(0,1)::Float64`: taper final
+- `l∈(0,1)::Float64`: taper initial
+
+# Output
+- `Q::Float64`: Whittle log-likelihood function
+
+# Notes
+The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
+The condition `m < l` must hold. 
+The default values of `m` and `l` are 0.5 and 0, respectively.
+
+# Examples
+```julia-repl
+julia> whittle_llk(0.4,randn(100,1))
+```
+"""
+function whittle_llk(d, x::Array; m=0.5, l=0)
+
+    T = length(x)
+
+    if m < l
+       error("Taper initial is greater than final")
+    end
+
+    #d = -1 + 5/2 * exp(d) / (1+exp(d));	
+
+    first = Int(max(round(T^l),2))
+    last = Int(round(T^m))
+
+    I_w, w = periodogram(x)
+
+    I_w = I_w[first:last]
+    w = w[first:last]
+
+    G = sum( I_w .* (w.^(2*d)) )/length(w)
+    Q = log(G) - 2*d*sum( log.(w) )/length(w)
+
+    return Q
+end
+
+
+"""
+    whittle_est(x::Array; m=0.5, l=0)
+
+Estimate the long memory parameter of a time series `x` using the Whittle log-likelihood function. See XX for details.
+
+# Arguments
+- `x::Vector`: time series
+- `m∈(0,1)::Float64`: taper final
+- `l∈(0,1)::Float64`: taper initial
+
+# Output
+- `d::Float64`: long memory parameter
+
+# Notes
+The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
+The condition `m < l` must hold.
+The default values of `m` and `l` are 0.5 and 0, respectively.
+
+# Examples
+```julia-repl
+julia> whittle_est(randn(100,1))
+```
+"""
+function whittle_est(x::Array; m=0.5, l=0)
+    d0 = gph_est(x; m=m, l=l)
+    whittle = optimize(d->whittle_llk(first(d),x;m,l), [d0])
+
+    return whittle.minimizer
 end
