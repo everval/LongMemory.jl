@@ -1,7 +1,6 @@
 using FFTW, Optim
 
-export periodogram, gph_est
-
+export gph_est, whittle_est, exact_whittle_est
 
 """
     periodogram(x::Array)
@@ -156,5 +155,85 @@ function whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d->whittle_llk(first(d),x;m,l), [d0])
 
-    return whittle.minimizer
+    return whittle.minimizer[1]
 end
+
+"""
+    exact_whittle_llk(d, x::Array; m=0.5, l=0)
+
+Compute the exact Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See XXX for details.
+
+# Arguments
+- `d::Float64`: long memory parameter
+- `x::Vector`: time series
+- `m∈(0,1)::Float64`: taper final
+- `l∈(0,1)::Float64`: taper initial
+
+# Output
+- `Q::Float64`: Whittle log-likelihood function
+
+# Notes
+The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
+The condition `m < l` must hold.
+The default values of `m` and `l` are 0.5 and 0, respectively.
+
+# Examples
+```julia-repl
+julia> exact_whittle_llk(0.4,randn(100,1))
+```
+"""
+function exact_whittle_llk(d, x::Array; m=0.5, l=0)
+    T = length(x)
+
+    if m < l
+       error("Taper initial is greater than final")
+    end
+
+    last = Int(round(T^m))
+    first = Int(max(round(T^l),2))
+
+    dx = fracdiff(x,d)
+
+    I_w, w = periodogram(dx)
+
+    I_w = I_w[first:last]
+    w = w[first:last]
+
+    G = sum( I_w )/length(w)
+
+    Q = log(G) - 2*d*sum( log.(w) )/length(w)
+
+    return Q
+end
+
+
+"""
+    exact_whittle_est(x::Array; m=0.5, l=0)
+
+Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See XX for details.
+
+# Arguments
+- `x::Vector`: time series
+- `m∈(0,1)::Float64`: taper final
+- `l∈(0,1)::Float64`: taper initial
+
+# Output
+- `d::Float64`: long memory parameter
+
+# Notes
+The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
+The condition `m < l` must hold.
+The default values of `m` and `l` are 0.5 and 0, respectively.
+
+# Examples
+```julia-repl
+julia> exact_whittle_est(randn(100,1))
+```
+"""
+function exact_whittle_est(x::Array; m=0.5, l=0)
+    d0 = gph_est(x; m=m, l=l)
+    whittle = optimize(d->exact_whittle_llk(first(d),x;m=m,l=l), [d0])
+
+    return whittle.minimizer[1]
+end
+
