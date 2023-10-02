@@ -2,6 +2,9 @@ using FFTW, Optim
 
 export gph_est, whittle_est, exact_whittle_est
 
+import LongMemory: fracdiff
+
+
 """
     periodogram(x::Array)
 
