@@ -2,8 +2,6 @@ using FFTW, Optim
 
 export gph_est, whittle_est, exact_whittle_est
 
-include("GeneratingFunctions.jl")
-
 
 """
     periodogram(x::Array)
