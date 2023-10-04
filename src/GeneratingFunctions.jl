@@ -63,3 +63,51 @@ function csadiff(x::Array,p,q)
 
     return dx
 end
+
+"""
+    fi(T,d)
+
+Generate a time series with long memory parameter `d` and length `T` using the fractional difference filter.
+
+# Arguments
+- `T::Int`: length of the time series
+- `d::Float64`: fractional difference parameter
+
+# Output
+- `x::Vector`: time series
+
+# Examples
+```julia-repl
+julia> fi(100,0.4)
+```
+"""
+function fi(T::Int,d::Float64)
+    x = fracdiff(randn(T,1),d)
+
+    return x
+end
+
+"""
+    csagen(T,p,q)
+
+Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process.
+
+# Arguments
+- `T::Int`: length of the time series
+- `p::Float64`: first parameter of the cross-sectional aggregated process
+- `q::Float64`: second parameter of the cross-sectional aggregated process, which is related to the fractional difference parameter `d` by `q = 2(1-d)`
+
+# Output
+- `x::Vector`: time series
+
+# Examples
+```julia-repl
+julia> csagen(100,1.2,1.4)
+```
+"""
+function csagen(T::Int,p::Float64,q::Float64)
+    x = csadiff(randn(T,1),p,q)
+
+    return x
+end
+    

@@ -2,7 +2,7 @@ using FFTW, Optim
 
 export gph_est, whittle_est, exact_whittle_est
 
-import LongMemory: fracdiff
+include("GeneratingFunctions.jl")
 
 
 """
@@ -156,7 +156,7 @@ julia> whittle_est(randn(100,1))
 """
 function whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
-    whittle = optimize(d->whittle_llk(first(d),x;m,l), [d0])
+    whittle = optimize(d->whittle_llk(first(d),x;m=m,l=l), [d0])
 
     return whittle.minimizer[1]
 end
