@@ -1,6 +1,6 @@
-using FFTW, SpecialFunctions
+using FFTW, SpecialFunctions, Distributions
 
-export fracdiff, csadiff
+export fracdiff, csadiff, csagen, fi
 
 
 """
@@ -62,7 +62,6 @@ function fracdiff(x::Array, d::Int)
     return dx
 end
 
-
 """
     csadiff(x,p,q)
 
@@ -96,14 +95,18 @@ end
 
 
 """
-    csagen(T,p,q)
+    csagen(T::Int,p,q;μ=0,σ=1)
 
-Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process.
+Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process. See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
 
 # Arguments
 - `T::Int`: length of the time series
 - `p::Float64`: first parameter of the cross-sectional aggregated process
 - `q::Float64`: second parameter of the cross-sectional aggregated process, which is related to the fractional difference parameter `d` by `q = 2(1-d)`
+
+# Optional arguments
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
 
 # Output
 - `x::Vector`: time series
@@ -113,15 +116,65 @@ Generate a time series with long memory parameter `q` and length `T` using the c
 julia> csagen(100,1.2,1.4)
 ```
 """
-function csagen(T::Int,p,q)
-    x = csadiff(randn(T,1),p,q)
+function csagen(T::Int,p,q;μ=0,σ =1)
+    x = csadiff(rand(Normal(μ,σ),T),p,q)
 
     return x
 end
 
 
 """
-    fi(T,d)
+    csagen(T::Int,N::Int,p,q;t=0.01;μ=0,σ=1)
+
+Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregation of 'N' AR(1) processes à la Granger (1980).
+
+# Arguments
+- `T::Int`: length of the time series
+- `N::Int`: number of AR(1) processes
+- `p::Float64`: first parameter of the cross-sectional aggregated process
+- `q::Float64`: second parameter of the cross-sectional aggregated process, which is related to the fractional difference parameter `d` by `q = 2(1-d)`
+
+# Optional arguments
+- `t::Float64`: taper length
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
+
+# Notes
+Multiple dispatch is used to generate the finite sample process if 'N' is included in the arguments.
+
+# Output
+- `x::Vector`: time series
+
+# Examples
+```julia-repl
+julia> csagen(100,100,1.2,1.4)
+```
+"""
+function csagen(T::Int,N::Int,p,q;t=0.01,μ=0,σ=1)
+
+    params = sqrt.(rand(Beta(p,q),N)) #generate AR parameters from a Beta distribution
+
+    t = max(Int(round(T*t)),10) #taper length
+
+    X = zeros(T+t,N)
+
+    errors = rand(Normal(μ,σ),T+t,N)
+
+    for i = 1:N
+        for j = 2:T+t
+            X[j,i] = params[i]*X[j-1,i] + errors[j,i]
+        end
+    end
+
+    x = sum(X[t+1:T+t,:],dims=2)
+
+    return x
+
+end
+
+
+"""
+    fi(T,d;μ=0,σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the fractional difference filter.
 
@@ -129,11 +182,15 @@ Generate a time series with long memory parameter `d` and length `T` using the f
 - `T::Int`: length of the time series
 - `d::Float64`: fractional difference parameter
 
+# Optional arguments
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
+
 # Output
 - `x::Vector`: time series
 
 # Notes     
-Multiple dispatch is used to call the function `fracdiff` from this package. If `d` is an integer, the function returns a time series with first or null difference.
+Multiple dispatch is used for generation: If `d` is an integer, the function returns a time series with first or null difference.
 See `fracdiff` for details.
 
 # Examples
@@ -141,15 +198,19 @@ See `fracdiff` for details.
 julia> fi(100,0.4)
 ```
 """
-function fi(T::Int,d)
-    x = fracdiff(randn(T,1),d)
+function fi(T::Int,d;μ=0,σ=1)
+    x = fracdiff(rand(Normal(μ,σ),T),d)
 
     return x
 end
 
 
-function edmgen(T::Int,d::Float64)
-    x = fracdiff(randn(T,1),d)
+
+function edmgen(T::Int,d;t=0.05)
+    
+    first = Int(round(T*t))
+
+    x = 0
 
     return x
     
