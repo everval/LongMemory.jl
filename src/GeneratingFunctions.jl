@@ -2,6 +2,7 @@ using FFTW, SpecialFunctions
 
 export fracdiff, csadiff
 
+
 """
     fracdiff(x,d)
 
@@ -19,7 +20,7 @@ fractional difference filter. See [Jensen and Nielsen (2014)](https://onlinelibr
 julia> fracdiff(randn(100,1),0.4)
 ```
 """
-function fracdiff(x::Array,d)
+function fracdiff(x::Array,d::Float64)
     T = length(x)
 
     np2 = nextpow(2,2*T-1)
@@ -32,6 +33,35 @@ function fracdiff(x::Array,d)
 
     return dx
 end
+
+
+"""
+    fracdiff(x,d::Int)
+
+Compute the first or null difference of a time series `x`.
+Multiple dispatch is used to return the same input or call the function `diff` from the Julia standard library if `d=1` or `d=0`, respectively.
+
+# Arguments
+- `x::Vector`: time series
+- `d::Int64`: difference parameter
+
+# Examples
+```julia-repl
+julia> fracdiff(randn(100,1),1)
+```
+"""
+function fracdiff(x::Array, d::Int)
+    T = length(x)
+
+    if d == 0
+        dx = x
+    elseif d == 1
+        dx = diff(x, dims=1)
+    end
+
+    return dx
+end
+
 
 """
     csadiff(x,p,q)
@@ -83,7 +113,7 @@ Generate a time series with long memory parameter `q` and length `T` using the c
 julia> csagen(100,1.2,1.4)
 ```
 """
-function csagen(T::Int,p::Float64,q::Float64)
+function csagen(T::Int,p,q)
     x = csadiff(randn(T,1),p,q)
 
     return x
@@ -102,13 +132,25 @@ Generate a time series with long memory parameter `d` and length `T` using the f
 # Output
 - `x::Vector`: time series
 
+# Notes     
+Multiple dispatch is used to call the function `fracdiff` from this package. If `d` is an integer, the function returns a time series with first or null difference.
+See `fracdiff` for details.
+
 # Examples
 ```julia-repl
 julia> fi(100,0.4)
 ```
 """
-function fi(T::Int,d::Float64)
+function fi(T::Int,d)
     x = fracdiff(randn(T,1),d)
 
     return x
+end
+
+
+function edmgen(T::Int,d::Float64)
+    x = fracdiff(randn(T,1),d)
+
+    return x
+    
 end
