@@ -201,7 +201,6 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
     w = w[first:last]
 
     G = sum( I_w )/length(w)
-
     Q = log(G) - 2*d*sum( log.(w) )/length(w)
 
     return Q
