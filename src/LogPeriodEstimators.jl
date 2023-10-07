@@ -64,8 +64,8 @@ function gph_est(x::Array; m=0.5, l=0, br=0::Int)
        error("Taper initial is greater than final")
     end
 
-    last = Int(round(T^m))
-    first = Int(max(round(T^l),2))
+    last = round(Int,T^m)
+    first = max(round(Int,T^l),2)
 
     I_w, w = periodogram(x)
 
@@ -114,8 +114,8 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
 
     #d = -1 + 5/2 * exp(d) / (1+exp(d));	
 
-    first = Int(max(round(T^l),2))
-    last = Int(round(T^m))
+    first = max(round(Int,T^l),2)
+    last = round(Int,T^m)
 
     I_w, w = periodogram(x)
 
@@ -190,8 +190,8 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
        error("Taper initial is greater than final")
     end
 
-    last = Int(round(T^m))
-    first = Int(max(round(T^l),2))
+    last = round(Int,T^m)
+    first = max(round(Int,T^l),2)
 
     dx = fracdiff(x,d)
 

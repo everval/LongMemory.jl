@@ -1,6 +1,6 @@
 using FFTW, SpecialFunctions, Distributions
 
-export fracdiff, csadiff, csagen, fi
+export fracdiff, csadiff, csagen, fi, edmgen
 
 
 """
@@ -205,14 +205,49 @@ function fi(T::Int, d; μ=0, σ=1)
 end
 
 
+"""
+    edmgen(T::Int,d; t=0.5, μ=0, σ=1)
 
-function edmgen(T::Int, d; t=0.05)
+Generate a time series with long memory parameter `d` and length `T` using the error duration model à la Parke (1999).
 
-    first = Int(round(T * t))
+# Arguments
+- `T::Int`: length of the time series
+- `d::Float64`: fractional difference parameter
 
-    p = fi_survival_probs(T, d)
+# Optional arguments
+- `t::Float64`: taper length
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
 
-    x = 0
+# Output
+- `x::Vector`: time series
+
+# Notes
+The taper length `t` is the proportion of the time series that is pre-sampled to avoid the initial bias of the error duration model.
+
+# Examples
+```julia-repl
+julia> edmgen(100,0.4)
+```
+"""
+function edmgen(T::Int, d; t=0.5, μ=0, σ=1)
+
+    t = max(Int(round(T * t)),200) # Pre-sample
+
+    p = fi_survival_probs(T + t, d) # Survival probabilities
+
+    u = rand(T + t, 1)
+
+    tiempos = searchsortedlast.(Ref(p[:, 1]), u, rev=true) # Random times
+
+    x = zeros(T + t, 1) # Pre-allocate
+    err = rand(Normal(μ, σ), T + t) # Error term
+
+    for ii = 1:(T+t)
+        uxu = zeros(T + t, 1) # Pre-allocate
+        uxu[ii:min((ii + tiempos[ii] - 1), T + t), 1] .= err[ii] # Error term surviving
+        x = x + uxu
+    end
 
     return x
 
@@ -222,7 +257,7 @@ end
 """"
     fi_survival_probs(N::Int,d)
 
-Generate the survival probabilities of the fractional difference filter à la Parke (1999).
+Generate the survival probabilities of the error duration model à la Parke (1999).
 
 # Arguments
 - `N::Int`: length of the time series
@@ -250,3 +285,4 @@ function fi_survival_probs(N::Int, d)
     return p
 
 end
+
