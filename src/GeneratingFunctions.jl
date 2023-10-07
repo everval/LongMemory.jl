@@ -20,15 +20,15 @@ fractional difference filter. See [Jensen and Nielsen (2014)](https://onlinelibr
 julia> fracdiff(randn(100,1),0.4)
 ```
 """
-function fracdiff(x::Array,d::Float64)
+function fracdiff(x::Array, d::Float64)
     T = length(x)
 
-    np2 = nextpow(2,2*T-1)
+    np2 = nextpow(2, 2 * T - 1)
     k = 1:(T-1)
-    b = [1;cumprod((k.-d.-1)./k)]
-    padb = [b;zeros(np2-T,1)]
-    padx = [x;zeros(np2-T,1)]
-    dx = irfft(rfft(padx).*rfft(padb),np2)
+    b = [1; cumprod((k .- d .- 1) ./ k)]
+    padb = [b; zeros(np2 - T, 1)]
+    padx = [x; zeros(np2 - T, 1)]
+    dx = irfft(rfft(padx) .* rfft(padb), np2)
     dx = dx[1:T]
 
     return dx
@@ -80,14 +80,14 @@ Generate long memory by using the moving average representation of the cross-sec
 julia> csadiff(randn(100,1),1.2,1.4)
 ```
 """
-function csadiff(x::Array,p,q)
+function csadiff(x::Array, p, q)
     T = length(x)
 
-    np2 = nextpow(2,2*T-1)
-    coefs = ( beta.(p.+(0:T-1),q) ./ beta(p,q) ).^(1/2);
-    padcoefs = [coefs;zeros(np2-T,1)]
-    padx = [x;zeros(np2-T,1)]
-    dx = irfft(rfft(padx).*rfft(padcoefs),np2)
+    np2 = nextpow(2, 2 * T - 1)
+    coefs = (beta.(p .+ (0:T-1), q) ./ beta(p, q)) .^ (1 / 2)
+    padcoefs = [coefs; zeros(np2 - T, 1)]
+    padx = [x; zeros(np2 - T, 1)]
+    dx = irfft(rfft(padx) .* rfft(padcoefs), np2)
     dx = dx[1:T]
 
     return dx
@@ -116,8 +116,8 @@ Generate a time series with long memory parameter `q` and length `T` using the c
 julia> csagen(100,1.2,1.4)
 ```
 """
-function csagen(T::Int,p,q;μ=0,σ =1)
-    x = csadiff(rand(Normal(μ,σ),T),p,q)
+function csagen(T::Int, p, q; μ=0, σ=1)
+    x = csadiff(rand(Normal(μ, σ), T), p, q)
 
     return x
 end
@@ -150,23 +150,23 @@ Multiple dispatch is used to generate the finite sample process if 'N' is includ
 julia> csagen(100,100,1.2,1.4)
 ```
 """
-function csagen(T::Int,N::Int,p,q;t=0.01,μ=0,σ=1)
+function csagen(T::Int, N::Int, p, q; t=0.01, μ=0, σ=1)
 
-    params = sqrt.(rand(Beta(p,q),N)) #generate AR parameters from a Beta distribution
+    params = sqrt.(rand(Beta(p, q), N)) #generate AR parameters from a Beta distribution
 
-    t = max(Int(round(T*t)),10) #taper length
+    t = max(Int(round(T * t)), 10) #taper length
 
-    X = zeros(T+t,N)
+    X = zeros(T + t, N)
 
-    errors = rand(Normal(μ,σ),T+t,N)
+    errors = rand(Normal(μ, σ), T + t, N)
 
     for i = 1:N
         for j = 2:T+t
-            X[j,i] = params[i]*X[j-1,i] + errors[j,i]
+            X[j, i] = params[i] * X[j-1, i] + errors[j, i]
         end
     end
 
-    x = sum(X[t+1:T+t,:],dims=2)
+    x = sum(X[t+1:T+t, :], dims=2)
 
     return x
 
@@ -198,20 +198,55 @@ See `fracdiff` for details.
 julia> fi(100,0.4)
 ```
 """
-function fi(T::Int,d;μ=0,σ=1)
-    x = fracdiff(rand(Normal(μ,σ),T),d)
+function fi(T::Int, d; μ=0, σ=1)
+    x = fracdiff(rand(Normal(μ, σ), T), d)
 
     return x
 end
 
 
 
-function edmgen(T::Int,d;t=0.05)
-    
-    first = Int(round(T*t))
+function edmgen(T::Int, d; t=0.05)
+
+    first = Int(round(T * t))
+
+    p = fi_survival_probs(T, d)
 
     x = 0
 
     return x
-    
+
+end
+
+
+""""
+    fi_survival_probs(N::Int,d)
+
+Generate the survival probabilities of the fractional difference filter à la Parke (1999).
+
+# Arguments
+- `N::Int`: length of the time series
+- `d::Float64`: fractional difference parameter
+
+# Output
+- `p::Vector`: survival probabilities
+
+# Notes
+The survival probabilities are computed using the recursive formula `p_{t+1} = p_t * (t + d - 1) / (t + 1 - d)` to avoid numerical overflow.
+
+# Examples
+```julia-repl
+julia> fi_survival_probs(100,0.4)
+```
+"""
+function fi_survival_probs(N::Int, d)
+
+    p = zeros(N, 1)
+    p[1, 1] = 1
+    for ii = 1:N-1
+        p[ii+1, 1] = p[ii, 1] * (ii - 1 + d) / (ii + 1 - d)
+    end
+
+    return p
+
 end
