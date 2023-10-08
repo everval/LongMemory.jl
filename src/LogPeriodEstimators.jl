@@ -83,7 +83,7 @@ end
 """
     whittle_llk(d, x::Array; m=0.5, l=0)
 
-Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See XXX for details.
+Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See Künsch (1987) for details.
 
 # Arguments
 - `d::Float64`: long memory parameter
@@ -112,8 +112,8 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
        error("Taper initial is greater than final")
     end
 
-    #d = -1 + 5/2 * exp(d) / (1+exp(d));	
 
+    
     first = max(round(Int,T^l),2)
     last = round(Int,T^m)
 
@@ -132,7 +132,7 @@ end
 """
     whittle_est(x::Array; m=0.5, l=0)
 
-Estimate the long memory parameter of a time series `x` using the Whittle log-likelihood function. See XX for details.
+Estimate the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
 # Arguments
 - `x::Vector`: time series
@@ -159,10 +159,11 @@ function whittle_est(x::Array; m=0.5, l=0)
     return whittle.minimizer[1]
 end
 
+
 """
     exact_whittle_llk(d, x::Array; m=0.5, l=0)
 
-Compute the exact Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See XXX for details.
+Compute the exact Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
 # Arguments
 - `d::Float64`: long memory parameter
@@ -210,7 +211,7 @@ end
 """
     exact_whittle_est(x::Array; m=0.5, l=0)
 
-Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See XX for details.
+Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
 # Arguments
 - `x::Vector`: time series

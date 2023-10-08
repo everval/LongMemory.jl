@@ -212,7 +212,7 @@ Generate a time series with long memory parameter `d` and length `T` using the e
 
 # Arguments
 - `T::Int`: length of the time series
-- `d::Float64`: fractional difference parameter
+- `d::Float64`: long memory parameter
 
 # Optional arguments
 - `t::Float64`: taper length
