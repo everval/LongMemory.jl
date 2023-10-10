@@ -1,6 +1,6 @@
 name = "LongMemory"
 uuid = "f5f8e4a8-cb56-40ea-a13e-090cc212d358"
-authors = ["J. Eduardo Vera-Valdés"]
+authors = ["J. Eduardo Vera-Valdés <eduardo@math.aau.dk>"]
 version = "0.1.0-DEV"
 
 [deps]
