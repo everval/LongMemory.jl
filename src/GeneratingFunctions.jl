@@ -216,7 +216,7 @@ julia> fi(100,0.4)
 ```
 """
 function fi(T::Int, d; μ=0, σ=1)
-    x = fracdiff(rand(Normal(μ, σ), T), d)
+    x = fracdiff(rand(Normal(μ, σ), T), -d)
 
     return x
 end
