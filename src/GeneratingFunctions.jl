@@ -97,7 +97,8 @@ end
 """
     csagen(T::Int,p,q;μ=0,σ=1)
 
-Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process. See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
+Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process. 
+FSee [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
 
 # Arguments
 - `T::Int`: length of the time series
@@ -232,7 +233,7 @@ julia> edmgen(100,0.4)
 """
 function edmgen(T::Int, d; t=0.5, μ=0, σ=1)
 
-    t = max(Int(round(T * t)),200) # Pre-sample
+    t = max(Int(round(T * t)), 200) # Pre-sample
 
     p = fi_survival_probs(T + t, d) # Survival probabilities
 

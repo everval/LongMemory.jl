@@ -1,6 +1,6 @@
 using FFTW, Optim
 
-export gph_est, whittle_est, exact_whittle_est
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram
 
 
 """
@@ -81,6 +81,97 @@ end
 
 
 """
+    gph_est_variance(x::Array; m=0.5, l=0, br=0::Int)
+
+Estimate the variance of the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
+
+# Arguments
+- `x::Vector`: time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+- `br::Int64`: number of bias reduction terms
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+
+# Examples
+```julia-repl
+julia> gph_est_variance(fi(100,0.4))
+```
+"""
+function gph_est_variance(x::Array; m=0.5, br=0::Int)
+    T = length(x)
+    last = round(Int,T^m)
+
+    if br == 0
+        cr = 1
+    elseif br == 1
+        cr = 9/4
+    elseif br == 2
+        cr = 3.52
+    elseif br == 3
+        cr = 4.79
+    elseif br == 4
+        cr = 6.06
+    elseif br > 4
+        cr = 6.06
+        @warn "Variance inflation factor for bias reduction terms greater than 4 are not available. Using 4. It will greatly underestimate the variance."
+    else 
+        cr = 1
+        @warn "Invalid number of bias reduction terms. Using 0 for the variance inflation factor."
+    end
+
+    varb = cr*(π^2/24)/last
+    return varb
+end
+
+"""
+    gph_est_variance(T::Int; m=0.5, l=0, br=0::Int)
+
+Estimate the variance of the long memory parameter of a time series of length `T` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
+
+# Arguments
+- `T::Int`: length of the time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+- `br::Int64`: number of bias reduction terms
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+
+# Examples
+```julia-repl
+julia> gph_est_variance(100,0.4)
+```
+"""
+function gph_est_variance(T::Int; m=0.5, br=0::Int)
+    last = round(Int,T^m) 
+
+    if br == 0
+        cr = 1
+    elseif br == 1
+        cr = 9/4
+    elseif br == 2
+        cr = 3.52
+    elseif br == 3
+        cr = 4.79
+    elseif br == 4
+        cr = 6.06
+    elseif br > 4
+        cr = 6.06
+        @warn "Variance inflation factor for bias reduction terms greater than 4 are not available. Using 4. It will greatly underestimate the variance."
+    else 
+        cr = 1
+        @warn "Invalid number of bias reduction terms. Using 0 for the variance inflation factor."
+    end
+
+    varb = cr*(π^2/24)/last
+    return varb
+end
+
+"""
     whittle_llk(d, x::Array; m=0.5, l=0)
 
 Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See Künsch (1987) for details.
@@ -111,8 +202,6 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
     if m < l
        error("Taper initial is greater than final")
     end
-
-
     
     first = max(round(Int,T^l),2)
     last = round(Int,T^m)
@@ -157,6 +246,65 @@ function whittle_est(x::Array; m=0.5, l=0)
     whittle = optimize(d->whittle_llk(first(d),x;m=m,l=l), [d0])
 
     return whittle.minimizer[1]
+end
+
+"""
+    whittle_est_variance(x::Array; m=0.5)
+
+Estimate the variance of the estimator for the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
+
+# Arguments
+- `x::Vector`: time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+    The variance is the same as the one from using the exact Whittle log-likelihood function.
+
+# Examples
+```julia-repl
+julia> whittle_est_variance(fi(100,0.4))
+```
+"""
+function whittle_est_variance(x::Array;m=0.5)
+    T = length(x)
+    last = round(Int,T^m)
+
+    cr = 1
+
+    varb = cr*(1/4)/last
+    return varb
+end
+
+""" 
+    whittle_est_variance(T::Int;m=0.5
+
+Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the Whittle log-likelihood function. See Künsch (1987) for details.
+
+# Arguments
+- `T::Int`: length of the time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+The variance is the same as the one from using the exact Whittle log-likelihood function.
+
+# Examples
+```julia-repl
+julia> whittle_est_variance(100,0.4)
+```
+"""
+function whittle_est_variance(T::Int;m=0.5)
+    last = round(Int,T^m)
+
+    cr = 1
+
+    varb = cr*(1/4)/last
+    return varb
 end
 
 
