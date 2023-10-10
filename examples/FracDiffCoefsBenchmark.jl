@@ -22,7 +22,6 @@ end
 
 R = 10^4
 
-
 @time begin
     for r in 1:R
         coefsr = fi_rec(d, T)

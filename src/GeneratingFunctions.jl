@@ -1,6 +1,6 @@
 using FFTW, Distributions
 
-export fracdiff, csadiff, csagen, fi, edmgen
+export fracdiff, csadiff, csagen, edmgen, fi, figen, arfigen, arfimagen
 
 
 """
@@ -220,6 +220,117 @@ function fi(T::Int, d; μ=0, σ=1)
 
     return x
 end
+function figen(T::Int, d; μ=0, σ=1)
+    x = fracdiff(rand(Normal(μ, σ), T), -d)
+
+    return x
+end
+
+"""
+    arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+
+Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,q) model.
+
+# Arguments
+- `T::Int`: length of the time series
+- `μ::Float64`: mean of the time series
+- `AR::Array`: AR coefficients
+- `d::Float64`: fractional difference parameter
+- `MA::Array`: MA coefficients
+
+# Optional arguments
+- `σ::Float64`: standard deviation of the time series
+
+# Output
+- `x::Vector`: time series
+
+# Notes
+The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodríguez Caballero (2023)](https://www.mathworks.com/matlabcentral/fileexchange/53301-arfima-p-d-q)
+
+# Examples
+```julia-repl
+julia> arfimagen(100, 0, [0.2; -0.5], 0.4, [-0.3; 0.1]])
+```
+"""
+function arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+    p = length(AR)
+    q = length(MA)
+
+    if q == 0
+        u = rand(Normal(0, σ), T + p, 1)
+    else
+        uM = zeros(T, q + 1)
+        u = rand(Normal(0, σ), T + p + q, 1)
+        MAb = [1; MA]
+
+        for ii in 1:q+1
+            for jj in 1:ii
+                uM[:, ii] .+= MAb[jj] * u[q+1-jj+1:T+q-jj+1]
+            end
+        end
+        u = sum(uM, dims=2)
+    end
+
+    fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
+
+    if p == 0
+        x = fiu
+    else
+        xb = zeros(T + p)
+        for ii in p+1:T+p
+            for jj in 1:p
+                xb[ii] += AR[jj] * xb[ii-jj]
+            end
+            xb[ii] = μ + xb[ii] + fiu[ii-p]
+        end
+        x = xb[p+1:T+p]
+    end
+    return x
+end
+
+"""
+    arfigen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
+
+Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,0) model.
+
+# Arguments
+- `T::Int`: length of the time series
+- `μ::Float64`: mean of the time series
+- `AR::Array`: AR coefficients
+- `d::Float64`: fractional difference parameter
+
+# Optional arguments
+- `σ::Float64`: standard deviation of the time series
+
+# Output
+- `x::Vector`: time series
+
+# Notes
+The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodríguez Caballero (2023)](https://www.mathworks.com/matlabcentral/fileexchange/53301-arfima-p-d-q)
+
+# Examples
+```julia-repl
+julia> arfigen(100, 0, [0.2; -0.5], 0.4])
+```
+"""
+function arfigen(T::Int, μ::Real, AR, d::Real; σ=1)
+    p = length(AR)
+
+    u = rand(Normal(0, σ), T + p, 1)
+
+    fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
+
+    xb = zeros(T + p)
+    for ii in p+1:T+p
+        for jj in 1:p
+            xb[ii] += AR[jj] * xb[ii-jj]
+        end
+        xb[ii] = μ + xb[ii] + fiu[ii-p]
+    end
+    x = xb[p+1:T+p]
+
+    return x
+end
 
 
 """
@@ -302,4 +413,6 @@ function fi_survival_probs(N::Int, d)
     return p
 
 end
+
+
 
