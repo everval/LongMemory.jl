@@ -23,12 +23,11 @@ julia> periodogram(randn(100,1))
 function periodogram(x::Array)
     T = length(x)
 
-    I_w = abs.(rfft(x)) .^ 2 ./ T # periodogram
-    w = 2pi * (0:T-1) ./ T  # Fourier frequencies
+    I_w = abs.(rfft(x)).^ 2 ./ T # periodogram
+    w = 2pi*(0:T-1) ./ T  # Fourier frequencies
 
-    # int rounds to nearest integer. We want to round up or take 1/2 + 1 to
-    # make sure we get the whole interval from [0, pi]
-    ind = iseven(T) ? round(Int, T / 2 + 1) : ceil(Int, T / 2)
+    # int rounds to get the whole interval from [0, pi]
+    ind = iseven(T) ? round(Int, T/2 + 1) : ceil(Int, T/2)
     I_w, w = I_w[1:ind], w[1:ind]
     return I_w, w
 end

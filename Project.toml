@@ -8,7 +8,6 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
 julia = "1"

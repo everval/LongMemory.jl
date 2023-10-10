@@ -1,4 +1,4 @@
-using FFTW, SpecialFunctions, Distributions
+using FFTW, Distributions
 
 export fracdiff, csadiff, csagen, fi, edmgen
 
@@ -8,12 +8,14 @@ export fracdiff, csadiff, csagen, fi, edmgen
 
 Compute the fractional difference of a time series `x` with fractional order `d∈(-1/2,1/2)`.
 
-The function uses the fast Fourier transform to compute the convolution of the time series with the
-fractional difference filter. See [Jensen and Nielsen (2014)](https://onlinelibrary.wiley.com/doi/10.1111/jtsa.12074) for details.
-
 # Arguments
 - `x::Vector`: time series
 - `d::Float64`: fractional difference parameter
+
+# Notes
+The function uses the fast Fourier transform to compute the convolution of the time series with the fractional difference filter. 
+See [Jensen and Nielsen (2014)](https://onlinelibrary.wiley.com/doi/10.1111/jtsa.12074) for details.
+We use autoregressive formulas to efficiently compute the coefficients of the fractional difference filter.
 
 # Examples
 ```julia-repl
@@ -24,11 +26,17 @@ function fracdiff(x::Array, d::Float64)
     T = length(x)
 
     np2 = nextpow(2, 2 * T - 1)
-    k = 1:(T-1)
-    b = [1; cumprod((k .- d .- 1) ./ k)]
-    padb = [b; zeros(np2 - T, 1)]
+
+    coefs = zeros(T)
+    coefs[1] = 1
+    for t in 1:T-1
+        coefs[t+1] = coefs[t] * ((t - d - 1) / t)
+    end
+
+    padcoefs = [coefs; zeros(np2 - T, 1)]
     padx = [x; zeros(np2 - T, 1)]
-    dx = irfft(rfft(padx) .* rfft(padb), np2)
+
+    dx = irfft(rfft(padx) .* rfft(padcoefs), np2)
     dx = dx[1:T]
 
     return dx
@@ -62,6 +70,7 @@ function fracdiff(x::Array, d::Int)
     return dx
 end
 
+
 """
     csadiff(x,p,q)
 
@@ -73,7 +82,8 @@ Generate long memory by using the moving average representation of the cross-sec
 - `q::Float64`: second parameter of the cross-sectional aggregated process, which is related to the fractional difference parameter `d` by `q = 2(1-d)`
 
 # Notes
-`q` determines the long memory parameter of the cross-sectional aggregated process. The relation `q = 2(1-d)` holds, where `d` is the fractional difference parameter.	
+`q` determines the long memory parameter of the cross-sectional aggregated process. The relation `q = 2(1-d)` holds, where `d` is the fractional difference parameter.
+We use autoregressive formulas to efficiently compute the coefficients of the moving average representation of the cross-sectional aggregated process. 
 
 # Examples
 ```julia-repl
@@ -84,7 +94,13 @@ function csadiff(x::Array, p, q)
     T = length(x)
 
     np2 = nextpow(2, 2 * T - 1)
-    coefs = (beta.(p .+ (0:T-1), q) ./ beta(p, q)) .^ (1 / 2)
+
+    coefs = zeros(T)
+    coefs[1] = 1
+    for t in 2:T
+        coefs[t] = coefs[t-1] * ((p + t - 2) / (p + t - 2 + q))^(1 / 2)
+    end
+
     padcoefs = [coefs; zeros(np2 - T, 1)]
     padx = [x; zeros(np2 - T, 1)]
     dx = irfft(rfft(padx) .* rfft(padcoefs), np2)
