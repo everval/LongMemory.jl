@@ -1,35 +1,6 @@
-using Optim, LinearAlgebra
+using Optim, LinearAlgebra, SpecialFunctions
 
 export fi_mle_est
-
-"""
-    fi_var_vals(T::Int,d::Real)
-
-Computes the autocovariance function of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
-
-# Arguments
-- `T::Int`: The number of lags to compute.
-- `d::Real`: The fractional differencing parameter.
-
-# Notes
-This function uses the recursive formula for the autocovariance function of the fractional differenced process. 
-
-# Examples    
-```julia
-julia> fi_var_vals(10, 0.4)
-```
-"""
-function fi_var_vals(T::Int, d::Real)
-    vars = zeros(T)
-    vars[1] = 1
-    for k = 1:(T-1)
-        vars[k+1] = (d + k - 1) / (k - d) * vars[k]
-    end
-
-    return vars
-
-end
-
 
 """
     my_toeplitz(coefs::Array)
@@ -63,6 +34,33 @@ end
 
 
 """
+    fi_var_vals(T::Int,d::Real)
+
+Computes the autocovariance function of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `d::Real`: The fractional differencing parameter.
+
+# Notes
+This function uses the recursive formula for the autocovariance function of the fractional differenced process. 
+
+# Examples    
+```julia
+julia> fi_var_vals(10, 0.4)
+```
+"""
+function fi_var_vals(T::Int, d::Real)
+    vars = zeros(T)
+    vars[1] = 1
+    for k = 1:(T-1)
+        vars[k+1] = (d + k - 1) / (k - d) * vars[k]
+    end
+
+    return vars
+end
+
+"""
     fi_var_matrix(T::Int, d::Real)
 
 Constructs the autocovariance matrix of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
@@ -93,6 +91,7 @@ Computes the log-likelihood of the fractional differenced process with parameter
 
 # Notes
 This function computes the concentrated log-likelihood function of the fractional differenced process with parameter `d` given the data `x`.
+The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik (1999)](http://fmwww.bc.edu/ec-p/software/ox/Ox.arfima.v2.1.pdf).	
 
 # Examples    
 ```julia
@@ -118,7 +117,8 @@ Computes the maximum likelihood estimate of the fractional differencing paramete
 - `x::Array`: The data.
 
 # Notes
-This function uses the `Optim` package to optimize the log-likelihood function.
+This function uses the `Optim` package to minimize the log-likelihood function.
+The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik (1999)](http://fmwww.bc.edu/ec-p/software/ox/Ox.arfima.v2.1.pdf).	
 
 # Examples    
 ```julia
@@ -132,10 +132,113 @@ function fimle_est(x::Array)
     dini = log((d0 + 1 / 2) / (1 / 2 - d0))
 
     dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
-    dmle = -1/2 + exp(dmle) / (1 + exp(dmle))
+    dmle = -1 / 2 + exp(dmle) / (1 + exp(dmle))
     V = fi_var_matrix(length(x), dmle)
     σ2 = (x'/V*x)[1, 1] / length(x)
 
     return dmle, σ2
-
 end
+
+
+"""
+    csa_var_vals(T::Int, p::Real, q::Real)
+
+Computes the autocovariance function of the CSA process with parameters `p` and `q` at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `p::Real`: The first parameter of the CSA process.
+- `q::Real`: The second parameter of the CSA process.
+
+# Notes
+This function uses the recursive formula for the autocovariance function of the CSA process.
+
+# Examples    
+```julia
+julia> csa_var_vals(20, 0.4, 0.6)
+```
+"""
+function csa_var_vals(T::Int, p::Real, q::Real)
+
+    s = Int(ceil(T / 2))
+
+    trin_even = zeros(s)
+    trin_odd = zeros(s)
+
+    trin_even[1] = gamma(p) / gamma(p + q - 1)
+    trin_odd[1] = gamma(p + 1 / 2) / gamma(p + q - 1 / 2)
+
+    for ii in 1:s-1
+        trin_even[ii+1] = (p + ii - 1) / (p + q - 2 + ii) * trin_even[ii]
+        trin_odd[ii+1] = (p + ii + 1 / 2 - 1) / (p + q + ii - 1 / 2 - 1) * trin_odd[ii]
+    end
+
+    trin = zeros(2 * s)
+    trin[1:2:2*s] .= trin_even
+    trin[2:2:2*s] .= trin_odd
+
+    trin_c = trin[1:T]
+
+    acf = trin_c .* (gamma(p + q) / (gamma(p) * (q - 1))) * (beta(p, q) / beta(p, q - 1))
+
+    return acf
+end
+
+"""
+    csa_var_matrix(T::Int, d::Real)
+
+Constructs the autocovariance matrix of the CSA process with parameters`p` and `q` at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `p::Real`: The first parameter of the CSA process.
+- `q::Real`: The second parameter of the CSA process.
+
+# Examples    
+```julia
+julia> fi_var_matrix(10, 1.4, 1.8)
+```
+"""
+function csa_var_matrix(T::Int, p::Real, q::Real)
+    coefs = csa_var_vals(T, p, q)
+    return my_toeplitz(coefs)
+end
+
+
+"""
+    csa_llk(p::Real, q::Real, x::Array)
+
+Computes the log-likelihood of the CSA process with parameters `p` and `q` given the data `x`.
+
+# Arguments
+- `p::Real`: The first parameter of the CSA process.
+- `q::Real`: The second parameter of the CSA process.
+- `x::Array`: The data.
+
+# Notes
+This function computes the concentrated log-likelihood function of the CSA process with parameters `p` and `q` given the data `x`.
+
+# Examples    
+```julia
+julia> csa_llk(1.4, 1.8, randn(100,1))
+```
+"""
+function csa_llk(p::Real, q::Real, x::Array)
+    #d = -1 / 2 + exp(d) / (1 + exp(d))
+    T = length(x)
+    V = csa_var_matrix(T, p, q)
+    llk = logdet(V) / T + log((x'/V*x)[1, 1] / T)
+    return llk
+end
+
+
+#function csamle_est(x::Array)
+#
+#    pqmle = optimize(pq -> csa_llk(first(pq), last(pq), x), [pini, qini]).minimizer
+#    pmle = -1 / 2 + exp(pqmle[1]) / (1 + exp(pqmle[1]))
+#    qmle = -1 / 2 + exp(pqmle[2]) / (1 + exp(pqmle[2]))
+#    V = csa_var_matrix(length(x), pmle, qmle)
+#    σ2 = (x'/V*x)[1, 1] / length(x)
+#
+#    return pmle, qmle, σ2
+#end
