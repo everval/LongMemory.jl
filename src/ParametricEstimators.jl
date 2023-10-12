@@ -14,7 +14,6 @@ Computes the autocovariance function of the fractional differenced process with 
 # Notes
 This function uses the recursive formula for the autocovariance function of the fractional differenced process. 
 
-
 # Examples    
 ```julia
 julia> fi_var_vals(10, 0.4)
@@ -131,22 +130,12 @@ function fimle_est(x::Array)
     d0 = min(0.49, d0)
     d0 = max(-0.49, d0)
     dini = log((d0 + 1 / 2) / (1 / 2 - d0))
-    #dmle = 0.0
-    #flag = 1
-    #try
+
     dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
-    dmle = -1 / 2 + exp(dmle) / (1 + exp(dmle))
+    dmle = -1/2 + exp(dmle) / (1 + exp(dmle))
     V = fi_var_matrix(length(x), dmle)
     σ2 = (x'/V*x)[1, 1] / length(x)
-    #catch 
-    #    println("Couldn't optimize.")
-    #    println("Returning GPH estimate.")
-    #    dmle = d0
-    #    flag = 0
-    #end
-    #if flag == 0
-    #    return dmle, flag
-    #else
+
     return dmle, σ2
-    #end
+
 end
