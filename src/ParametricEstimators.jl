@@ -1,6 +1,6 @@
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fi_mle_est
+export fimle_est, csamle_est
 
 """
     my_toeplitz(coefs::Array)
@@ -224,7 +224,8 @@ julia> csa_llk(1.4, 1.8, randn(100,1))
 ```
 """
 function csa_llk(p::Real, q::Real, x::Array)
-    #d = -1 / 2 + exp(d) / (1 + exp(d))
+    p = 1 + 2 * ( exp(p) / (1+exp(p)) )
+    q = 1 + 2 * ( exp(q) / (1+exp(q)) )
     T = length(x)
     V = csa_var_matrix(T, p, q)
     llk = logdet(V) / T + log((x'/V*x)[1, 1] / T)
@@ -232,13 +233,36 @@ function csa_llk(p::Real, q::Real, x::Array)
 end
 
 
-#function csamle_est(x::Array)
-#
-#    pqmle = optimize(pq -> csa_llk(first(pq), last(pq), x), [pini, qini]).minimizer
-#    pmle = -1 / 2 + exp(pqmle[1]) / (1 + exp(pqmle[1]))
-#    qmle = -1 / 2 + exp(pqmle[2]) / (1 + exp(pqmle[2]))
-#    V = csa_var_matrix(length(x), pmle, qmle)
-#    σ2 = (x'/V*x)[1, 1] / length(x)
-#
-#    return pmle, qmle, σ2
-#end
+"""
+    csa_mle_est(x::Array)
+
+Computes the maximum likelihood estimate of the parameters `p` and `q` of the CSA process and the variance of the CSA process given the data `x`.
+
+# Arguments
+- `x::Array`: The data.
+
+# Notes
+This function uses the `Optim` package to minimize the log-likelihood function.
+
+# Examples    
+```julia
+julia> csa_mle_est(randn(100,1))
+```
+"""
+function csamle_est(x::Array)
+    pini = 1+rand()
+    qini = 1+rand()
+
+    pini = log((pini-1)/(3-pini))
+    qini = log((qini-1)/(3-qini))
+
+    res = optimize(pq -> csa_llk(first(pq), last(pq), x), [pini, qini]).minimizer
+
+    pmle = 1 + 2 * ( exp(res[1]) / (1+exp(res[1])) );
+    qmle = 1 + 2 * ( exp(res[2]) / (1+exp(res[2])) );
+
+    V = csa_var_matrix(length(x), pmle, qmle)
+    σ2 = (x'/V*x)[1, 1] / length(x)
+
+    return pmle, qmle, σ2
+end
