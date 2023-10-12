@@ -1,61 +1,79 @@
-using Random, Plots, FFTW
+using SpecialFunctions
 
-function arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
-    p = length(AR)
-    q = length(MA)
+function fi_var_vals_re(T::Int, d::Real)
+    k = 0:(T-1)
 
-    if q == 0
-        u = rand(Normal(0, σ), T + p, 1)
-    else
-        uM = zeros(T, q + 1)
-        u = rand(Normal(0, σ), T + p + q, 1)
-        MAb = [1; MA]
+    vars = (gamma.(k .+ d) .* gamma(1 - d)) ./ (gamma.(k .- d .+ 1) .* gamma(d))
 
-        for j in 1:q+1
-            for i in 1:j
-                uM[:, j] .+= MAb[i] * u[q+1-i+1:T+q-i+1]
-            end
-        end
-        u = sum(uM, dims=2)
-    end
+    return vars
 
-    fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
-
-    if p == 0
-        y = fiu
-    else
-        yb = zeros(T + p)
-        for j in p+1:T+p
-            for i in 1:p
-                yb[j] += AR[i] * yb[j-i]
-            end
-            yb[j] = μ + yb[j] + fiu[j-p]
-        end
-        y = yb[p+1:T+p]
-    end
-    return y
 end
 
-function arfigen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
-    p = length(AR)
+function fi_var_vals(T::Int, d::Real)
 
-    u = rand(Normal(0, σ), T + p, 1)
-
-    fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
-
-    yb = zeros(T + p)
-    for ii in p+1:T+p
-        for jj in 1:p
-            yb[ii] += AR[jj] * yb[ii-jj]
-        end
-        yb[ii] = μ + yb[ii] + fiu[ii-p]
+    vars = zeros(T)
+    vars[1] = 1
+    for k = 1:(T-1)
+        vars[k+1] = (d + k - 1) / (k - d) * vars[k]
     end
-    y = yb[p+1:T+p]
 
-    return y
+    return vars
+
 end
 
 
+T = 10^5
+R = 10^3
+d = 0.4
+@time begin
+    for ii = 1:R
+        fi_var_vals_re(T, 0.4)
+    end
+end
+
+@time begin
+    for ii = 1:R
+        fi_var_vals(T, 0.4)
+    end
+end
+
+fi_var_vals_re(10, d) ≈ fi_var_vals(10, d)
 
 
-gph_est((arfigen(1000, 0, [], 0.4)))
+N = 4
+coefs = fi_var_vals(N, d)
+
+"""
+    my_toeplitz(coefs::Array)
+
+Constructs a Toeplitz matrix from the given coefficients.
+
+# Arguments
+- `coefs::Array`: An array of coefficients.
+
+# Examples    
+```julia
+julia> my_toeplitz([1, 2, 3])
+```
+"""
+function my_toeplitz(coefs::Array)
+    N = length(coefs)
+    Toep = zeros(N, N)
+
+    for ii = 1:N
+        for jj = 1:N
+            if ii >= jj
+                Toep[ii, jj] = coefs[ii-jj+1]
+            else
+                Toep[ii, jj] = coefs[jj-ii+1]
+            end
+        end
+    end
+
+    return Toep
+end
+
+Gam = my_toeplitz(coefs)
+
+
+d = 400;theta = -0.5+(exp(d))/(exp(d))

@@ -226,6 +226,7 @@ function figen(T::Int, d; μ=0, σ=1)
     return x
 end
 
+
 """
     arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
 
@@ -287,6 +288,7 @@ function arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
     end
     return x
 end
+
 
 """
     arfigen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
