@@ -3,8 +3,8 @@ using Documenter
 
 DocMeta.setdocmeta!(LongMemory, :DocTestSetup, :(using LongMemory); recursive=true)
 
-makedocs(;
-    modules=[LongMemory],
+makedocs(
+    #modules=[LongMemory, LongMemory.GeneratingFunctions],
     authors="J. Eduardo Vera-Valdés",
     repo="https://github.com/everval/LongMemory.jl/blob/{commit}{path}#{line}",
     sitename="LongMemory.jl",
@@ -15,7 +15,12 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home" => "index.md",
+        "Home" => "about.md",
+        "Generating Functions" => "generating.md",
+        "Log-Periodogram Estimation" => "logperiod.md",
+        "Parameter Estimation" => "parametric.md",
+        "Data Available" => "data.md",
+        "Index" => "index.md",
     ],
 )
 

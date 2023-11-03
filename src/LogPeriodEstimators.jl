@@ -1,3 +1,17 @@
+"""
+# LogPeriodEstimators
+
+This module contains functions to estimate the long memory parameter of a time series using the log-periodogram estimator and the Whittle log-likelihood function.
+
+## Author
+[J. Eduardo Vera-Valdés](https://everval.github.io/)
+
+"""
+module LogPeriodEstimators
+
+include("GeneratingFunctions.jl")
+import .GeneratingFunctions: fracdiff
+
 using FFTW, Optim
 
 export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram
@@ -385,3 +399,4 @@ function exact_whittle_est(x::Array; m=0.5, l=0)
     return whittle.minimizer[1]
 end
 
+end # module

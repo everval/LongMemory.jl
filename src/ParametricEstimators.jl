@@ -1,3 +1,14 @@
+"""
+# ParametricEstimators
+
+This module contains functions for estimating the parameters of the fractional differenced process à la ARFIMA and the CSA process.
+
+## Author
+[J. Eduardo Vera-Valdés](https://everval.github.io/)
+
+"""
+module ParametricEstimators
+
 using Optim, LinearAlgebra, SpecialFunctions
 
 export fimle_est, csamle_est
@@ -266,3 +277,5 @@ function csamle_est(x::Array)
 
     return pmle, qmle, σ2
 end
+
+end # module ParametricEstimators

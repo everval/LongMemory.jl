@@ -1,3 +1,15 @@
+"""
+# GeneratingFunctions
+
+This module contains functions to generate time series with long memory.
+
+
+## Author
+- [J. Eduardo Vera-Valdés](https://everval.github.io/)
+
+"""
+module GeneratingFunctions
+
 using FFTW, Distributions
 
 export fracdiff, csadiff, csagen, edmgen, fi, figen, arfigen, arfimagen
@@ -114,7 +126,7 @@ end
     csagen(T::Int,p,q;μ=0,σ=1)
 
 Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process. 
-FSee [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
+See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
 
 # Arguments
 - `T::Int`: length of the time series
@@ -416,5 +428,4 @@ function fi_survival_probs(N::Int, d)
 
 end
 
-
-
+end #module
