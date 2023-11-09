@@ -21,6 +21,9 @@ Constructs a Toeplitz matrix from the given coefficients.
 # Arguments
 - `coefs::Array`: An array of coefficients.
 
+# Output
+- `Toep::Array`: The Toeplitz matrix constructed from the given coefficients.
+
 # Examples    
 ```julia
 julia> my_toeplitz([1, 2, 3])
@@ -53,6 +56,9 @@ Computes the autocovariance function of the fractional differenced process with 
 - `T::Int`: The number of lags to compute.
 - `d::Real`: The fractional differencing parameter.
 
+# Output
+- `vars::Array`: The autocovariance function of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
+
 # Notes
 This function uses the recursive formula for the autocovariance function of the fractional differenced process. 
 
@@ -80,6 +86,9 @@ Constructs the autocovariance matrix of the fractional differenced process with 
 - `T::Int`: The number of lags to compute.
 - `d::Real`: The fractional differencing parameter.
 
+# Output
+- `V::Array`: The autocovariance matrix of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
+
 # Examples    
 ```julia
 julia> fi_var_matrix(10, 0.4)
@@ -99,6 +108,9 @@ Computes the log-likelihood of the fractional differenced process with parameter
 # Arguments
 - `x::Array`: The data.
 - `d::Real`: The fractional differencing parameter.
+
+# Output
+- `llk::Real`: The log-likelihood of the fractional differenced process with parameter `d` given the data `x`.
 
 # Notes
 This function computes the concentrated log-likelihood function of the fractional differenced process with parameter `d` given the data `x`.
@@ -126,6 +138,10 @@ Computes the maximum likelihood estimate of the fractional differencing paramete
 
 # Arguments
 - `x::Array`: The data.
+
+# Output
+- `d::Real`: The maximum likelihood estimate of the fractional differencing parameter.
+- `σ2::Real`: The maximum likelihood estimate of the variance of the fractional differenced process.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.
@@ -160,6 +176,9 @@ Computes the autocovariance function of the CSA process with parameters `p` and 
 - `T::Int`: The number of lags to compute.
 - `p::Real`: The first parameter of the CSA process.
 - `q::Real`: The second parameter of the CSA process.
+
+# Output
+- `acf::Array`: The autocovariance function of the CSA process with parameters `p` and `q` at lags 0, 1, ..., `T-1`.
 
 # Notes
 This function uses the recursive formula for the autocovariance function of the CSA process.
@@ -205,6 +224,9 @@ Constructs the autocovariance matrix of the CSA process with parameters`p` and `
 - `p::Real`: The first parameter of the CSA process.
 - `q::Real`: The second parameter of the CSA process.
 
+# Output
+- `V::Array`: The autocovariance matrix of the CSA process with parameters `p` and `q` at lags 0, 1, ..., `T-1`.
+
 # Examples    
 ```julia
 julia> fi_var_matrix(10, 1.4, 1.8)
@@ -225,6 +247,9 @@ Computes the log-likelihood of the CSA process with parameters `p` and `q` given
 - `p::Real`: The first parameter of the CSA process.
 - `q::Real`: The second parameter of the CSA process.
 - `x::Array`: The data.
+
+# Output
+- `llk::Real`: The log-likelihood of the CSA process with parameters `p` and `q` given the data `x`.
 
 # Notes
 This function computes the concentrated log-likelihood function of the CSA process with parameters `p` and `q` given the data `x`.
@@ -251,6 +276,11 @@ Computes the maximum likelihood estimate of the parameters `p` and `q` of the CS
 
 # Arguments
 - `x::Array`: The data.
+
+# Output
+- `p::Real`: The maximum likelihood estimate of the first parameter of the CSA process.
+- `q::Real`: The maximum likelihood estimate of the second parameter of the CSA process.
+- `σ2::Real`: The maximum likelihood estimate of the variance of the CSA process.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.

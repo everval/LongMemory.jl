@@ -58,6 +58,9 @@ Estimate the long memory parameter of a time series `x` using the log-periodogra
 - `l∈(0,1)::Float64`: taper initial
 - `br::Int64`: number of bias reduction terms
 
+# Output
+- `d::Float64`: long memory parameter
+
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The default values of `m` and `l` are 0.5 and 0, respectively.
@@ -105,6 +108,9 @@ Estimate the variance of the long memory parameter of a time series `x` using th
 - `m∈(0,1)::Float64`: taper final
 - `br::Int64`: number of bias reduction terms
 
+# Output
+- `varb::Float64`: variance of the long memory parameter
+
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
 
@@ -150,6 +156,9 @@ Estimate the variance of the long memory parameter of a time series of length `T
 # Optional arguments
 - `m∈(0,1)::Float64`: taper final
 - `br::Int64`: number of bias reduction terms
+
+# Output
+- `varb::Float64`: variance of the long memory parameter
 
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
@@ -272,6 +281,9 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 # Optional arguments
 - `m∈(0,1)::Float64`: taper final
 
+# Output
+- `varb::Float64`: variance of the estimator
+
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
     The variance is the same as the one from using the exact Whittle log-likelihood function.
@@ -301,6 +313,9 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 
 # Optional arguments
 - `m∈(0,1)::Float64`: taper final
+
+# Output
+- `varb::Float64`: variance of the estimator
 
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.

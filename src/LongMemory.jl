@@ -21,4 +21,8 @@ include("ParametricEstimators.jl")
 using .ParametricEstimators
 export fimle_est, csamle_est
 
+include("ClassicEstimators.jl")
+using .ClassicEstimators
+export rescaled_range_est, rescaled_range, my_std
+
 end

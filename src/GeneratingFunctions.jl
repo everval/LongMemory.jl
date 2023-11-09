@@ -24,6 +24,9 @@ Compute the fractional difference of a time series `x` with fractional order `d�
 - `x::Vector`: time series
 - `d::Float64`: fractional difference parameter
 
+# Output
+- `dx::Vector`: fractional difference of `x`
+
 # Notes
 The function uses the fast Fourier transform to compute the convolution of the time series with the fractional difference filter. 
 See [Jensen and Nielsen (2014)](https://onlinelibrary.wiley.com/doi/10.1111/jtsa.12074) for details.
@@ -65,6 +68,9 @@ Multiple dispatch is used to return the same input or call the function `diff` f
 - `x::Vector`: time series
 - `d::Int64`: difference parameter
 
+# Output
+- `dx::Vector`: first or null difference of `x`
+
 # Examples
 ```julia-repl
 julia> fracdiff(randn(100,1),1)
@@ -92,6 +98,9 @@ Generate long memory by using the moving average representation of the cross-sec
 - `x::Vector`: time series
 - `p::Float64`: first parameter of the cross-sectional aggregated process
 - `q::Float64`: second parameter of the cross-sectional aggregated process, which is related to the fractional difference parameter `d` by `q = 2(1-d)`
+
+# Output
+- `dx::Vector`: time series with long memory
 
 # Notes
 `q` determines the long memory parameter of the cross-sectional aggregated process. The relation `q = 2(1-d)` holds, where `d` is the fractional difference parameter.
@@ -138,7 +147,7 @@ See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
 - `σ::Float64`: standard deviation of the time series
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Examples
 ```julia-repl
@@ -172,7 +181,7 @@ Generate a time series with long memory parameter `q` and length `T` using the c
 Multiple dispatch is used to generate the finite sample process if 'N' is included in the arguments.
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Examples
 ```julia-repl
@@ -216,7 +225,7 @@ Generate a time series with long memory parameter `d` and length `T` using the f
 - `σ::Float64`: standard deviation of the time series
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Notes     
 Multiple dispatch is used for generation: If `d` is an integer, the function returns a time series with first or null difference.
@@ -255,7 +264,7 @@ Generate a time series with long memory parameter `d` and length `T` using the A
 - `σ::Float64`: standard deviation of the time series
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Notes
 The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodríguez Caballero (2023)](https://www.mathworks.com/matlabcentral/fileexchange/53301-arfima-p-d-q)
@@ -317,7 +326,7 @@ Generate a time series with long memory parameter `d` and length `T` using the A
 - `σ::Float64`: standard deviation of the time series
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Notes
 The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodríguez Caballero (2023)](https://www.mathworks.com/matlabcentral/fileexchange/53301-arfima-p-d-q)
@@ -362,7 +371,7 @@ Generate a time series with long memory parameter `d` and length `T` using the e
 - `σ::Float64`: standard deviation of the time series
 
 # Output
-- `x::Vector`: time series
+- `x::Vector`: time series with long memory
 
 # Notes
 The taper length `t` is the proportion of the time series that is pre-sampled to avoid the initial bias of the error duration model.
