@@ -19,6 +19,7 @@ makedocs(
         "Generating Functions" => "generating.md",
         "Log-Periodogram Estimation" => "logperiod.md",
         "Parameter Estimation" => "parametric.md",
+        "Classic Estimation" => "classicest.md",
         "Data Available" => "data.md",
         "Index" => "index.md",
     ],

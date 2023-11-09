@@ -24,6 +24,10 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Parametric Estimators for Long Memory](@ref) contains the documentation for the functions to estimate time series long memory models by parametric methods. Of particular interest is the ARFIMA model.
 
+## Classic Estimation
+
+[Classic Estimator for the Hurst Effect](@ref) contains the documentation for the functions to estimate the rescaled range (R/S) statistic and the Hurst coefficient.
+
 ## List of Functions
 
 [Index](@ref) contains the list of all the functions in the package.
