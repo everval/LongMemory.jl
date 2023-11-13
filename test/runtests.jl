@@ -10,5 +10,7 @@ using Test
     @test arfigen(10,0,[],0;σ=0) ≈ zeros(10,1)
     @test arfigen(10,1,[],0;σ=0) ≈ ones(10,1)
     @test figen(10,0;σ=0) ≈ zeros(10,1)
-
+    @test fi_ar_coefs(0.4,1) ≈ [-0.4]
+    @test fi_ar_coefs(0.2,1) ≈ [-0.2]
+    @test fi_ar_coefs(0.2,10) ≈ zeros(10,1)
 end
