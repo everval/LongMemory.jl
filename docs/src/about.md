@@ -28,6 +28,10 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Classic Estimator for the Hurst Effect](@ref) contains the documentation for the functions to estimate the rescaled range (R/S) statistic and the Hurst coefficient.
 
+## Forecasting
+
+[Forecasting Long Memory Processes](@ref) contains the documentation for the functions to forecast long memory processes using the fractional differencing operator and the cross-sectional aggregation method.
+
 ## List of Functions
 
 [Index](@ref) contains the list of all the functions in the package.

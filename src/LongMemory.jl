@@ -25,4 +25,8 @@ include("ClassicEstimators.jl")
 using .ClassicEstimators
 export rescaled_range_est, rescaled_range, my_std
 
+include("Forecasters.jl")
+using .Forecasters
+export fi_ar_coefs, fi_forecast, csa_forecast
+
 end

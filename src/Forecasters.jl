@@ -272,7 +272,7 @@ Constructs a bottom Toeplitz matrix from the given coefficients.
 
 # Examples    
 ```julia
-julia> my_top_toeplitz([1, 2, 3])
+julia> my_half_toeplitz([1, 2, 3])
 ```
 """
 function my_half_toeplitz(coefs::Array)
@@ -289,3 +289,5 @@ function my_half_toeplitz(coefs::Array)
 
     return Toep
 end
+
+end # module Forecasters
