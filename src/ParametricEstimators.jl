@@ -11,7 +11,7 @@ module ParametricEstimators
 
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fimle_est, csamle_est
+export fimle_est, csamle_est, har_est
 
 """
     my_toeplitz(coefs::Array)
@@ -307,5 +307,61 @@ function csamle_est(x::Array)
 
     return pmle, qmle, σ2
 end
+
+
+"""
+    har_est(x::Array; m::Array = [1 , 5 , 22])
+
+Estimates the parameters of the Heterogenous Autoregressive (HAR) model given the data `x`. See [Corsi (2009)](https://academic.oup.com/jfec/article/7/2/174/856522).
+
+# Arguments
+- `x::Array`: The data.
+
+# Optional arguments
+- `m::Array`: An array with the lags to use in the estimation. By default, the lags are 1, 5, and 22; as suggested by the original paper.
+
+# Output
+- `betas::Array`: The estimated parameters of the HAR model.
+- `sigma::Real`: The estimated variance of the HAR model.
+
+# Examples    
+```julia
+julia> har_est(randn(100,1))
+```
+"""
+function har_est(x::Array; m::Array=[1,5,22])
+    T = length(x)
+    n = length(m)
+    sort!(m)
+
+    mm = maximum(m)
+
+    if mm != m[end]
+        error("The maximum lag must be the last value in the array.")
+    end
+
+    X = zeros(T-mm, n+1)
+    X[:,1] = ones(T-mm, 1)
+
+    for ii = 1:n
+        cm = m[ii]
+        aux = zeros(T-mm, 1)
+        for jj = 1:cm
+            aux = aux + x[mm-jj+1:T-jj,1]
+        end
+        X[:,ii+1] = aux/cm
+    end
+
+    Y = x[mm+1:T,1]
+
+    betas = X\Y
+    err = Y-X*betas
+
+    sigma = (err'*err)/(T-mm-n-1)
+
+    return betas, sigma
+
+end
+
 
 end # module ParametricEstimators

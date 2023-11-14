@@ -19,7 +19,7 @@ export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_va
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators
-export fimle_est, csamle_est
+export fimle_est, csamle_est, har_est
 
 include("ClassicEstimators.jl")
 using .ClassicEstimators
