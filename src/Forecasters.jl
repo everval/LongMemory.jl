@@ -9,7 +9,7 @@ This module contains functions to forecast a long memory time series using the f
 """
 module Forecasters
 
-export fi_ar_coefs, fi_forecast, csa_forecast
+export fi_ar_coefs, fi_forecast, csa_forecast, har_forecast
 
 
 """
@@ -318,7 +318,6 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
     n = length(m)
 
     ## Estimation because the matrix are needed for forecasting
-
     X = zeros(T-mm+h, n+1)
     X[:,1] = ones(T-mm+h, 1)
 
@@ -341,7 +340,6 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
     sigma = (err'*err)/(T-mm-n-1)
 
     ## Forecasting
-
     for ii = 1:h
         Y[T-mm+ii,1] = X[T-mm+ii-1,:]'*betas 
         for jj = 1:n
