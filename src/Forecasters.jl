@@ -9,9 +9,6 @@ This module contains functions to forecast a long memory time series using the f
 """
 module Forecasters
 
-include("ParametricEstimators.jl")
-import .ParametricEstimators: har_est
-
 export fi_ar_coefs, fi_forecast, csa_forecast
 
 
@@ -294,18 +291,33 @@ function my_half_toeplitz(coefs::Array)
 end
 
 
+"""
+    har_forecast(x::Array, h::Int, m::Array=[1,5,22])
+
+Computes the forecast of a time series by fitting and recursevely forecasting the HAR model.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+
+# Output
+- `xfor::Array`: The forecast of the time series as a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The first T elements are the original time series.
+
+# Optional Arguments
+- `m::Array`: The lags to include in the HAR model. The default is [1,5,22].
+
+# Examples    
+```julia
+julia> har_forecast(figen(100,0.2), 10)
+```
+"""
 function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
     T = length(x)
-
-    ## Estimating the HAR model in-function because we will need the regressor matrix
-    n = length(m)
-    sort!(m)
-
+    
     mm = maximum(m)
+    n = length(m)
 
-    if mm != m[end]
-        error("The maximum lag must be the last value in the array.")
-    end
+    ## Estimation because the matrix are needed for forecasting
 
     X = zeros(T-mm+h, n+1)
     X[:,1] = ones(T-mm+h, 1)
@@ -319,7 +331,7 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
         X[1:T-mm,ii+1] = aux/cm
     end
 
-    Y = zeros(T-mm+h,1)
+    Y = zeros(T-mm+h,3)
 
     Y[1:T-mm,1] = x[mm+1:T,1]
 
@@ -331,52 +343,18 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
     ## Forecasting
 
     for ii = 1:h
-        X[T-mm+ii,2] = 
-
-        X[T-mm+ii,2] = X[T-mm+ii,2]
-
-        aux = zeros(n+1,1)
+        Y[T-mm+ii,1] = X[T-mm+ii-1,:]'*betas 
         for jj = 1:n
             cm = m[jj]
-            for kk = 1:cm
-                aux[jj+1,1] = aux[jj+1,1] + x[ii-kk,1]
-            end
-            aux[jj+1,1] = aux[jj+1,1]/cm
+            X[T-mm+ii,jj+1] = sum(Y[T-mm+ii-cm:T-mm+ii-1,1])/cm
         end
-        x[ii,1] = aux'*betas + sqrt(sigma)*randn(1,1)
     end
+    sigma= 1
 
-    for ii = T-mm+1:T-mm+maxlags
-        aux = zeros(n+1,1)
-        for jj = 1:n
-            cm = m[jj]
-            for kk = 1:cm
-                aux[jj+1,1] = aux[jj+1,1] + x[ii-kk,1]
-            end
-            aux[jj+1,1] = aux[jj+1,1]/cm
-        end
-        x[ii,1] = aux'*betas + sqrt(sigma)*randn(1,1)
-    end
+    Y[T-mm+1:T-mm+h,2] = Y[T-mm+1:T-mm+h,1] - 2*sigma*ones(h,1)
+    Y[T-mm+1:T-mm+h,3] = Y[T-mm+1:T-mm+h,1] + 2*sigma*ones(h,1)
 
-
-    vars = har_est(x;m=m)
-
-
-
-    matvar = my_half_toeplitz(vars[1:T,1])
-
-    errs = zeros(maxlags,1)
-
-    errs[1:T,1] = matvar\x
-
-    xfor = zeros(maxlags,1)
-    xfor[1:T,1] = x
-
-    for ii = T+1:maxlags
-        xfor[ii,1] = sum( reverse(errs[1:(ii-1),1]).*vars[1:ii-1] )
-    end
-
-    return xfor
+    return Y
 
 end
 
