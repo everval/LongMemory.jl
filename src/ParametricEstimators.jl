@@ -9,6 +9,9 @@ This module contains functions for estimating the parameters of the fractional d
 """
 module ParametricEstimators
 
+include("LogPeriodEstimators.jl")
+import .LogPeriodEstimators: gph_est
+
 using Optim, LinearAlgebra, SpecialFunctions
 
 export fimle_est, csamle_est, har_est
