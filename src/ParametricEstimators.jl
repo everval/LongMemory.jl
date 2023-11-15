@@ -77,6 +77,7 @@ function fi_var_vals(T::Int, d::Real)
         vars[k+1] = (d + k - 1) / (k - d) * vars[k]
     end
 
+    vars = vars.*( gamma(1-2*d)/(gamma(1-d))^2 )
     return vars
 end
 
@@ -212,9 +213,9 @@ function csa_var_vals(T::Int, p::Real, q::Real)
 
     trin_c = trin[1:T]
 
-    acf = trin_c .* (gamma(p + q) / (gamma(p) * (q - 1))) * (beta(p, q) / beta(p, q - 1))
+    acv = trin_c .* (gamma(p + q) / (gamma(p) * (q - 1))) * (beta(p, q))
 
-    return acf
+    return acv
 end
 
 """
@@ -232,7 +233,7 @@ Constructs the autocovariance matrix of the CSA process with parameters`p` and `
 
 # Examples    
 ```julia
-julia> fi_var_matrix(10, 1.4, 1.8)
+julia> csa_var_matrix(10, 1.4, 1.8)
 ```
 """
 function csa_var_matrix(T::Int, p::Real, q::Real)
