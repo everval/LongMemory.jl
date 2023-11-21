@@ -16,5 +16,7 @@ using Test
     @test fi_var_vals(1,0.4) ≈ [2.070098325296286]
     @test fi_var_vals(1,0.2) ≈ [1.0986855396043997]
     @test csa_var_vals(1, 1.4, 1.4) ≈ [2.1130846015858644]
+    @test fi_cor_vals(1, 0.4) ≈ [1]
+    @test csa_cor_vals(1, 1.4, 1.4) ≈ [1]
 
 end

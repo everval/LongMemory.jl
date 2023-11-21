@@ -79,14 +79,9 @@ function fi_forecast(x::Array, h::Int, d::Real, σ::Real)
 
     maxlags = T+h
 
-    vars = fi_ar_coefs(d,maxlags)
 
     xfor = zeros(maxlags,3)
-    xfor[1:T,1] = x
-
-    for ii = T+1:maxlags
-        xfor[ii,1] = sum( reverse(xfor[1:(ii-1),1]).*vars[1:ii-1] )
-    end
+    xfor[:,1] = fi_forecast(x,h,d)
 
     xfor[T+1:maxlags,2] = xfor[T+1:maxlags,1] - 2*σ*ones(maxlags-T,1)
     xfor[T+1:maxlags,3] = xfor[T+1:maxlags,1] + 2*σ*ones(maxlags-T,1)
@@ -202,20 +197,8 @@ function csa_forecast(x::Array, h::Int, p::Real, q::Real, σ::Real)
 
     maxlags = T+h
 
-    vars = csa_ma_coefs(p,q,maxlags)
-
-    matvar = my_half_toeplitz(vars[1:T,1])
-
-    errs = zeros(maxlags,1)
-
-    errs[1:T,1] = matvar\x
-
     xfor = zeros(maxlags,3)
-    xfor[1:T,1] = x
-
-    for ii = T+1:maxlags
-        xfor[ii,1] = sum( reverse(errs[1:(ii-1),1]).*vars[1:ii-1] )
-    end
+    xfor[:,1] = csa_forecast(x,h,p,q)
 
     xfor[T+1:maxlags,2] = xfor[T+1:maxlags,1] - 2*σ*ones(maxlags-T,1)
     xfor[T+1:maxlags,3] = xfor[T+1:maxlags,1] + 2*σ*ones(maxlags-T,1)
@@ -301,7 +284,7 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 - `h::Int`: The number of periods to forecast.
 
 # Output
-- `xfor::Array`: The forecast of the time series as a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The first T elements are the original time series.
+- `xfor::Array`: The forecast of the time series as a column vector. The first T-max(m) elements are the original time series.
 
 # Optional Arguments
 - `m::Array`: The lags to include in the HAR model. The default is [1,5,22].
@@ -330,7 +313,7 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
         X[1:T-mm,ii+1] = aux/cm
     end
 
-    Y = zeros(T-mm+h,3)
+    Y = zeros(T-mm+h,1)
 
     Y[1:T-mm,1] = x[mm+1:T,1]
 
@@ -347,14 +330,47 @@ function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
             X[T-mm+ii,jj+1] = sum(Y[T-mm+ii-cm:T-mm+ii-1,1])/cm
         end
     end
-    sigma= 1
-
-    Y[T-mm+1:T-mm+h,2] = Y[T-mm+1:T-mm+h,1] - 2*sigma*ones(h,1)
-    Y[T-mm+1:T-mm+h,3] = Y[T-mm+1:T-mm+h,1] + 2*sigma*ones(h,1)
 
     return Y
 
 end
 
+
+
+"""
+    har_forecast(x::Array, h::Int, σ::Real, m::Array=[1,5,22])
+
+Computes the forecast of a time series by fitting and recursevely forecasting the HAR model.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+- `σ::Real`: The standard deviation of the forecast errors.
+
+# Output
+- `xfor::Array`: The forecast of the time series as a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The first T-max(m) elements are the original time series.
+
+# Optional Arguments
+- `m::Array`: The lags to include in the HAR model. The default is [1,5,22].
+
+# Examples    
+```julia
+julia> har_forecast(figen(100,0.2), 10, 1)
+```
+"""
+function har_forecast(x::Array, h::Int, σ::Real, m::Array=[1,5,22])
+    T = length(x)
+
+    mm = maximum(m)
+
+    Y = zeros(T-mm+h,3)
+    Y[:,1] = har_forecast(x,h,m)
+    
+    Y[T-mm+1:T-mm+h,2] = Y[T-mm+1:T-mm+h,1] - 2*σ*ones(h,1)
+    Y[T-mm+1:T-mm+h,3] = Y[T-mm+1:T-mm+h,1] + 2*σ*ones(h,1)
+
+    return Y
+
+end
 
 end # module Forecasters
