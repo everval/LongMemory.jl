@@ -14,7 +14,7 @@ import .LogPeriodEstimators: gph_est
 
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals
 
 """
     my_toeplitz(coefs::Array)
@@ -80,6 +80,33 @@ function fi_var_vals(T::Int, d::Real)
     vars = vars.*( gamma(1-2*d)/(gamma(1-d))^2 )
     return vars
 end
+
+"""
+    fi_cor_vals(T::Int,d::Real)
+
+Computes the autocorrelation function of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `d::Real`: The fractional differencing parameter.
+
+# Output
+- `vars::Array`: The autocorrelation function of the fractional differenced process with parameter `d` at lags 0, 1, ..., `T-1`.
+
+# Notes
+This function uses fi_var_vals() to compute the autocovariance function and then normalizes by the variance (first computed value). 
+
+# Examples    
+```julia
+julia> fi_cor_vals(10, 0.4)
+```
+"""
+function fi_cor_vals(T::Int, d::Real)
+    vars = fi_var_vals(T, d)
+    cors = vars./vars[1]
+    return cors
+end
+
 
 """
     fi_var_matrix(T::Int, d::Real)
@@ -217,6 +244,36 @@ function csa_var_vals(T::Int, p::Real, q::Real)
 
     return acv
 end
+
+
+"""
+    csa_cor_vals(T::Int, p::Real, q::Real)
+
+Computes the autocorrelation function of the CSA process with parameters `p` and `q` at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `p::Real`: The first parameter of the CSA process.
+- `q::Real`: The second parameter of the CSA process.
+
+# Output
+- `acf::Array`: The autocorrelation function of the CSA process with parameters `p` and `q` at lags 0, 1, ..., `T-1`.
+
+# Notes
+This function uses csa_var_vals() to compute the autocovariance function and then normalizes by the variance (first computed value). 
+
+# Examples    
+```julia
+julia> csa_cor_vals(20, 0.4, 0.6)
+```
+"""
+function csa_cor_vals(T::Int, p::Real, q::Real)
+
+    vars = csa_var_vals(T, p, q)
+    cors = vars./vars[1]
+    return cors
+end
+
 
 """
     csa_var_matrix(T::Int, d::Real)

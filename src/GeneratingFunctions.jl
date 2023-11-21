@@ -12,7 +12,7 @@ module GeneratingFunctions
 
 using FFTW, Distributions
 
-export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen
+export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
 
 
 """

@@ -11,7 +11,8 @@ module LongMemory
 
 include("GeneratingFunctions.jl")
 using .GeneratingFunctions
-export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen
+export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
+
 
 include("LogPeriodEstimators.jl")
 using .LogPeriodEstimators
@@ -19,7 +20,7 @@ export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_va
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals
 
 include("ClassicEstimators.jl")
 using .ClassicEstimators
