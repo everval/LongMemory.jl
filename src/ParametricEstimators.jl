@@ -14,7 +14,7 @@ import .LogPeriodEstimators: gph_est
 
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fimle_est, csamle_est, har_est
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals
 
 """
     my_toeplitz(coefs::Array)
@@ -136,7 +136,7 @@ end
 
 
 """
-    fimle_est(x::Array)
+    fi_mle_est(x::Array)
 
 Computes the maximum likelihood estimate of the fractional differencing parameter and the variance of the fractional differenced process given the data `x`.
 
@@ -153,10 +153,10 @@ The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik
 
 # Examples    
 ```julia
-julia> fimle_est(randn(100,1))
+julia> fi_mle_est(randn(100,1))
 ```
 """
-function fimle_est(x::Array)
+function fi_mle_est(x::Array)
     d0 = gph_est(x)
     d0 = min(0.49, d0)
     d0 = max(-0.49, d0)
@@ -294,7 +294,7 @@ This function uses the `Optim` package to minimize the log-likelihood function.
 julia> csa_mle_est(randn(100,1))
 ```
 """
-function csamle_est(x::Array)
+function csa_mle_est(x::Array)
     pini = 1+rand()
     qini = 1+rand()
 

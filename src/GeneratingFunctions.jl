@@ -12,7 +12,7 @@ module GeneratingFunctions
 
 using FFTW, Distributions
 
-export fracdiff, csadiff, csagen, edmgen, fi, figen, arfigen, arfimagen
+export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen
 
 
 """
@@ -132,7 +132,7 @@ end
 
 
 """
-    csagen(T::Int,p,q;μ=0,σ=1)
+    csa_gen(T::Int,p,q;μ=0,σ=1)
 
 Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregated process. 
 See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
@@ -151,10 +151,10 @@ See [Vera-Valdes(2021)](https://www.mdpi.com/2225-1146/9/4/39) for details.
 
 # Examples
 ```julia-repl
-julia> csagen(100,1.2,1.4)
+julia> csa_gen(100,1.2,1.4)
 ```
 """
-function csagen(T::Int, p, q; μ=0, σ=1)
+function csa_gen(T::Int, p, q; μ=0, σ=1)
     x = csadiff(rand(Normal(μ, σ), T), p, q)
 
     return x
@@ -162,7 +162,7 @@ end
 
 
 """
-    csagen(T::Int,N::Int,p,q;t=0.01;μ=0,σ=1)
+    csa_gen(T::Int,N::Int,p,q;t=0.01;μ=0,σ=1)
 
 Generate a time series with long memory parameter `q` and length `T` using the cross-sectional aggregation of 'N' AR(1) processes à la Granger (1980).
 
@@ -185,10 +185,10 @@ Multiple dispatch is used to generate the finite sample process if 'N' is includ
 
 # Examples
 ```julia-repl
-julia> csagen(100,100,1.2,1.4)
+julia> csa_gen(100,100,1.2,1.4)
 ```
 """
-function csagen(T::Int, N::Int, p, q; t=0.01, μ=0, σ=1)
+function csa_gen(T::Int, N::Int, p, q; t=0.01, μ=0, σ=1)
 
     params = sqrt.(rand(Beta(p, q), N)) #generate AR parameters from a Beta distribution
 
@@ -241,7 +241,34 @@ function fi(T::Int, d; μ=0, σ=1)
 
     return x
 end
-function figen(T::Int, d; μ=0, σ=1)
+
+
+"""
+    fi_gen(T,d;μ=0,σ=1)
+
+Generate a time series with long memory parameter `d` and length `T` using the fractional difference filter.
+
+# Arguments
+- `T::Int`: length of the time series
+- `d::Float64`: fractional difference parameter
+
+# Optional arguments
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
+
+# Output
+- `x::Vector`: time series with long memory
+
+# Notes     
+Multiple dispatch is used for generation: If `d` is an integer, the function returns a time series with first or null difference.
+See `fracdiff` for details.
+
+# Examples
+```julia-repl
+julia> fi_gen(100,0.4)
+```
+"""
+function fi_gen(T::Int, d; μ=0, σ=1)
     x = fracdiff(rand(Normal(μ, σ), T), -d)
 
     return x
@@ -249,7 +276,7 @@ end
 
 
 """
-    arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+    arfima_gen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,q) model.
 
@@ -271,10 +298,10 @@ The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodrígu
 
 # Examples
 ```julia-repl
-julia> arfimagen(100, 0, [0.2; -0.5], 0.4, [-0.3; 0.1]])
+julia> arfima_gen(100, 0, [0.2; -0.5], 0.4, [-0.3; 0.1]])
 ```
 """
-function arfimagen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+function arfima_gen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
     p = length(AR)
     q = length(MA)
 
@@ -312,7 +339,7 @@ end
 
 
 """
-    arfigen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
+    arfi_gen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,0) model.
 
@@ -333,10 +360,10 @@ The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodrígu
 
 # Examples
 ```julia-repl
-julia> arfigen(100, 0, [0.2; -0.5], 0.4])
+julia> arfi_gen(100, 0, [0.2; -0.5], 0.4])
 ```
 """
-function arfigen(T::Int, μ::Real, AR, d::Real; σ=1)
+function arfi_gen(T::Int, μ::Real, AR, d::Real; σ=1)
     p = length(AR)
 
     u = rand(Normal(0, σ), T + p, 1)
@@ -357,7 +384,7 @@ end
 
 
 """
-    edmgen(T::Int,d; t=0.5, μ=0, σ=1)
+    edm_gen(T::Int,d; t=0.5, μ=0, σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the error duration model à la Parke (1999).
 
@@ -378,10 +405,10 @@ The taper length `t` is the proportion of the time series that is pre-sampled to
 
 # Examples
 ```julia-repl
-julia> edmgen(100,0.4)
+julia> edm_gen(100,0.4)
 ```
 """
-function edmgen(T::Int, d; t=0.5, μ=0, σ=1)
+function edm_gen(T::Int, d; t=0.5, μ=0, σ=1)
 
     t = max(Int(round(T * t)), 200) # Pre-sample
 
