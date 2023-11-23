@@ -11,7 +11,7 @@ module ClassicEstimators
 
 using Plots
 
-export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation
+export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation, autocorrelation_plot
 
 
 """
@@ -77,6 +77,33 @@ function autocorrelation(x::Array,k::Int=30;flag::Bool=false)
         display(plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle))
     end
     return acf
+end
+
+"""
+    autocorrelation_plot(x::Array, k::Int)
+
+Computes the autocorrelation function of a time series.
+
+# Arguments
+- `x::Array`: The time series.
+- `k::Int`: The lag of the autocorrelation.
+
+# Output
+- `p1::Plots.Plot`: The autocorrelation function.
+
+# Examples    
+```julia
+julia> autocorrelation_plot(randn(100), 10)
+```
+"""
+function autocorrelation_plot(x::Array,k::Int=30)
+    acv = autocovariance(x,k)
+    acf = acv./acv[1]
+    
+    p1 = plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle)
+
+    display(p1)
+    return p1
 end
 
 
