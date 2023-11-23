@@ -42,7 +42,7 @@ function autocovariance(x::Array, k::Int)
     acv = zeros(k, 1)
 
     for ii = 0:k-1
-        acv[ii+1, 1] = sum((x[1:T-ii] .- μ) .* (x[ii+1:T] .- μ)) / (T - ii)
+        acv[ii+1, 1] = sum((x[1:T-ii] .- μ) .* (x[ii+1:T] .- μ)) / (T)
     end
 
     return acv
