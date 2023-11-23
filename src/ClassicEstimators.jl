@@ -9,11 +9,12 @@ This module contains functions to estimate them Hurst coefficient, closely relat
 """
 module ClassicEstimators
 
+using Plots
+
 export rescaled_range_est, rescaled_range, sstd, smean, variance_plot
 
-
 """
-    variance_plot(x::Array; flag::Bool=true)
+    variance_plot(x::Array; flag::Bool=true, slope::Bool=true)
 
 Computes the variance plot of a time series and estimates the Hurst coefficient.
 
@@ -21,40 +22,44 @@ Computes the variance plot of a time series and estimates the Hurst coefficient.
 - `x::Array`: The time series.
 
 # Output
-- `beta::Real`: The estimated Hurst coefficient.
+- `d_var::Real`: The estimated long memory parameter computed as (beta+1)/2, where beta is the slope of the linear regression of the log of the variance plot.
+- `p1::Plots.Plot`: The variance plot if flag is true.
 
 # Optional arguments
 - `flag::Bool`: If true, the variance plot is displayed.
+- `slope::Bool`: If true, the slope of the linear regression is displayed.
 
 # Notes
-This function uses the linear regression method on the log of the variance plot to estimate the Hurst coefficient.
-
+This function uses the linear regression method on the log of the variance plot to estimate the long memory parameter.
 # Examples    
 ```julia
 julia> variance_plot(randn(100))
 ```
 """
-function variance_plot(x::Array; flag::Bool=true)
+function variance_plot(x::Array; flag::Bool=true, slope::Bool=true)
     T = length(x)
     k = floor(Int, T / 2)
 
-    Y = zeros(k-1, 1)
+    Y = zeros(k - 1, 1)
 
     for ii = 2:k
         Y[ii-1, 1] = sstdk(x, ii)
     end
 
-    X = log.(collect(2:k))
-    beta = X \ log.(Y)
+    X = [ones(k - 1, 1) collect(2:k)]
+    beta = log.(X) \ log.(Y)
 
     if flag == true
-        p1 = plot(X, log.(Y), seriestype=:scatter, label="", title="Variance Plot", xlabel="log(k)", ylabel="log(s2(k))")
-        plot!(X, beta .* X, line=:dash, label=string("Slope = ", beta) )
-
+        p1 = plot(X[:, 2], Y, line=:scatter, xaxis=:log, yaxis=:log, label="", title="Variance Plot", xlabel="log-sampling", ylabel="log-variance")
+        if slope == true
+            plot!(X[:, 2], X[:, 2] .^ beta[2], xaxis=:log, yaxis=:log, line=:dash, label=string("Slope = ", beta[2]))
+        end
         display(p1)
     end
 
-    return beta
+    d_var = (beta[2] + 1) / 2
+
+    return d_var
 
 end
 

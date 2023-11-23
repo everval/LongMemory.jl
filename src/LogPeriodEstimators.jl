@@ -12,9 +12,50 @@ module LogPeriodEstimators
 include("GeneratingFunctions.jl")
 import .GeneratingFunctions: fracdiff
 
-using FFTW, Optim
+using FFTW, Optim, Plots
 
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram, periodogram_plot
+
+
+"""
+    periodogram_plot(x::Array; slope::Bool=true)
+
+Plots the log-periodogram of a time series `x`.
+
+# Arguments
+- `x::Vector`: time series
+
+# Output
+- `p1::Plots.Plot`: log-periodogram
+
+# Optional arguments
+- `slope::Bool`: If true, the slope of the linear regression is displayed.
+
+# Examples
+```julia-repl
+julia> periodogram_plot(randn(100,1))
+```
+"""
+function periodogram_plot(x::Array; slope::Bool=true)
+    T = length(x)
+
+    I_wc, wc = periodogram(x)
+
+    I_w = I_wc[2:end]
+    w = wc[2:end]
+
+    p1 = plot(w, I_w, xlabel="log-frequency", ylabel="log-periodogram", label="", xaxis=:log, yaxis=:log, line=:scatter)
+
+    if slope == true
+        X = [ones(length(w)) log.(w)]
+        beta = X \ log.(I_w)
+        plot!(w, w .^ beta[2], xaxis=:log, yaxis=:log, line=:dash, label=string("Slope = ", beta[2]))
+    end
+
+    display(p1)
+
+    return p1
+end
 
 
 """
@@ -37,11 +78,10 @@ julia> periodogram(randn(100,1))
 function periodogram(x::Array)
     T = length(x)
 
-    I_w = abs.(rfft(x)).^ 2 ./ T # periodogram
-    w = 2pi*(0:T-1) ./ T  # Fourier frequencies
+    I_w = abs.(rfft(x)) .^ 2 ./ T
+    w = 2 * π * (0:T-1) ./ T
 
-    # int rounds to get the whole interval from [0, pi]
-    ind = iseven(T) ? round(Int, T/2 + 1) : ceil(Int, T/2)
+    ind = iseven(T) ? round(Int, T / 2 + 1) : ceil(Int, T / 2)
     I_w, w = I_w[1:ind], w[1:ind]
     return I_w, w
 end
@@ -77,20 +117,20 @@ function gph_est(x::Array; m=0.5, l=0, br=0::Int)
     T = length(x)
 
     if m < l
-       error("Taper initial is greater than final")
+        error("Taper initial is greater than final")
     end
 
-    last = round(Int,T^m)
-    first = max(round(Int,T^l),2)
+    last = round(Int, T^m)
+    first = max(round(Int, T^l), 2)
 
-    I_w, w = periodogram(x)
+    I_wc, wc = periodogram(x)
 
-    I_w = I_w[first:last]
-    w = w[first:last]
+    I_w = I_wc[first:last]
+    w = wc[first:last]
 
     Y = log.(I_w)
-    X = [-2*log.(w) w.^collect(0:2:(2*br))']  
-    β = X\Y
+    X = [-2 * log.(w) w .^ collect(0:2:(2*br))']
+    β = X \ Y
 
     return β[1]
 end
@@ -121,12 +161,12 @@ julia> gph_est_variance(fi(100,0.4))
 """
 function gph_est_variance(x::Array; m=0.5, br=0::Int)
     T = length(x)
-    last = round(Int,T^m)
+    last = round(Int, T^m)
 
     if br == 0
         cr = 1
     elseif br == 1
-        cr = 9/4
+        cr = 9 / 4
     elseif br == 2
         cr = 3.52
     elseif br == 3
@@ -136,12 +176,12 @@ function gph_est_variance(x::Array; m=0.5, br=0::Int)
     elseif br > 4
         cr = 6.06
         @warn "Variance inflation factor for bias reduction terms greater than 4 are not available. Using 4. It will greatly underestimate the variance."
-    else 
+    else
         cr = 1
         @warn "Invalid number of bias reduction terms. Using 0 for the variance inflation factor."
     end
 
-    varb = cr*(π^2/24)/last
+    varb = cr * (π^2 / 24) / last
     return varb
 end
 
@@ -169,12 +209,12 @@ julia> gph_est_variance(100,0.4)
 ```
 """
 function gph_est_variance(T::Int; m=0.5, br=0::Int)
-    last = round(Int,T^m) 
+    last = round(Int, T^m)
 
     if br == 0
         cr = 1
     elseif br == 1
-        cr = 9/4
+        cr = 9 / 4
     elseif br == 2
         cr = 3.52
     elseif br == 3
@@ -184,12 +224,12 @@ function gph_est_variance(T::Int; m=0.5, br=0::Int)
     elseif br > 4
         cr = 6.06
         @warn "Variance inflation factor for bias reduction terms greater than 4 are not available. Using 4. It will greatly underestimate the variance."
-    else 
+    else
         cr = 1
         @warn "Invalid number of bias reduction terms. Using 0 for the variance inflation factor."
     end
 
-    varb = cr*(π^2/24)/last
+    varb = cr * (π^2 / 24) / last
     return varb
 end
 
@@ -222,19 +262,19 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
     T = length(x)
 
     if m < l
-       error("Taper initial is greater than final")
+        error("Taper initial is greater than final")
     end
-    
-    first = max(round(Int,T^l),2)
-    last = round(Int,T^m)
+
+    first = max(round(Int, T^l), 2)
+    last = round(Int, T^m)
 
     I_w, w = periodogram(x)
 
     I_w = I_w[first:last]
     w = w[first:last]
 
-    G = sum( I_w .* (w.^(2*d)) )/length(w)
-    Q = log(G) - 2*d*sum( log.(w) )/length(w)
+    G = sum(I_w .* (w .^ (2 * d))) / length(w)
+    Q = log(G) - 2 * d * sum(log.(w)) / length(w)
 
     return Q
 end
@@ -265,7 +305,7 @@ julia> whittle_est(randn(100,1))
 """
 function whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
-    whittle = optimize(d->whittle_llk(first(d),x;m=m,l=l), [d0])
+    whittle = optimize(d -> whittle_llk(first(d), x; m=m, l=l), [d0])
 
     return whittle.minimizer[1]
 end
@@ -293,13 +333,13 @@ Multiple dispatch is used for computation. If the first input is an integer, the
 julia> whittle_est_variance(fi(100,0.4))
 ```
 """
-function whittle_est_variance(x::Array;m=0.5)
+function whittle_est_variance(x::Array; m=0.5)
     T = length(x)
-    last = round(Int,T^m)
+    last = round(Int, T^m)
 
     cr = 1
 
-    varb = cr*(1/4)/last
+    varb = cr * (1 / 4) / last
     return varb
 end
 
@@ -326,12 +366,12 @@ The variance is the same as the one from using the exact Whittle log-likelihood 
 julia> whittle_est_variance(100,0.4)
 ```
 """
-function whittle_est_variance(T::Int;m=0.5)
-    last = round(Int,T^m)
+function whittle_est_variance(T::Int; m=0.5)
+    last = round(Int, T^m)
 
     cr = 1
 
-    varb = cr*(1/4)/last
+    varb = cr * (1 / 4) / last
     return varb
 end
 
@@ -364,21 +404,21 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
     T = length(x)
 
     if m < l
-       error("Taper initial is greater than final")
+        error("Taper initial is greater than final")
     end
 
-    last = round(Int,T^m)
-    first = max(round(Int,T^l),2)
+    last = round(Int, T^m)
+    first = max(round(Int, T^l), 2)
 
-    dx = fracdiff(x,d)
+    dx = fracdiff(x, d)
 
     I_w, w = periodogram(dx)
 
     I_w = I_w[first:last]
     w = w[first:last]
 
-    G = sum( I_w )/length(w)
-    Q = log(G) - 2*d*sum( log.(w) )/length(w)
+    G = sum(I_w) / length(w)
+    Q = log(G) - 2 * d * sum(log.(w)) / length(w)
 
     return Q
 end
@@ -409,7 +449,7 @@ julia> exact_whittle_est(randn(100,1))
 """
 function exact_whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
-    whittle = optimize(d->exact_whittle_llk(first(d),x;m=m,l=l), [d0])
+    whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
 
     return whittle.minimizer[1]
 end

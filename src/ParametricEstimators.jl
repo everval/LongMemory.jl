@@ -77,7 +77,7 @@ function fi_var_vals(T::Int, d::Real)
         vars[k+1] = (d + k - 1) / (k - d) * vars[k]
     end
 
-    vars = vars.*( gamma(1-2*d)/(gamma(1-d))^2 )
+    vars = vars .* (gamma(1 - 2 * d) / (gamma(1 - d))^2)
     return vars
 end
 
@@ -103,7 +103,7 @@ julia> fi_cor_vals(10, 0.4)
 """
 function fi_cor_vals(T::Int, d::Real)
     vars = fi_var_vals(T, d)
-    cors = vars./vars[1]
+    cors = vars ./ vars[1]
     return cors
 end
 
@@ -270,7 +270,7 @@ julia> csa_cor_vals(20, 0.4, 0.6)
 function csa_cor_vals(T::Int, p::Real, q::Real)
 
     vars = csa_var_vals(T, p, q)
-    cors = vars./vars[1]
+    cors = vars ./ vars[1]
     return cors
 end
 
@@ -321,8 +321,8 @@ julia> csa_llk(1.4, 1.8, randn(100,1))
 ```
 """
 function csa_llk(p::Real, q::Real, x::Array)
-    p = 1 + 2 * ( exp(p) / (1+exp(p)) )
-    q = 1 + 2 * ( exp(q) / (1+exp(q)) )
+    p = 1 + 2 * (exp(p) / (1 + exp(p)))
+    q = 1 + 2 * (exp(q) / (1 + exp(q)))
     T = length(x)
     V = csa_var_matrix(T, p, q)
     llk = logdet(V) / T + log((x'/V*x)[1, 1] / T)
@@ -352,16 +352,16 @@ julia> csa_mle_est(randn(100,1))
 ```
 """
 function csa_mle_est(x::Array)
-    pini = 1+rand()
-    qini = 1+rand()
+    pini = 1 + rand()
+    qini = 1 + rand()
 
-    pini = log((pini-1)/(3-pini))
-    qini = log((qini-1)/(3-qini))
+    pini = log((pini - 1) / (3 - pini))
+    qini = log((qini - 1) / (3 - qini))
 
     res = optimize(pq -> csa_llk(first(pq), last(pq), x), [pini, qini]).minimizer
 
-    pmle = 1 + 2 * ( exp(res[1]) / (1+exp(res[1])) );
-    qmle = 1 + 2 * ( exp(res[2]) / (1+exp(res[2])) );
+    pmle = 1 + 2 * (exp(res[1]) / (1 + exp(res[1])))
+    qmle = 1 + 2 * (exp(res[2]) / (1 + exp(res[2])))
 
     V = csa_var_matrix(length(x), pmle, qmle)
     σ2 = (x'/V*x)[1, 1] / length(x)
@@ -390,7 +390,7 @@ Estimates the parameters of the Heterogenous Autoregressive (HAR) model given th
 julia> har_est(randn(100,1))
 ```
 """
-function har_est(x::Array; m::Array=[1,5,22])
+function har_est(x::Array; m::Array=[1, 5, 22])
     T = length(x)
     n = length(m)
     sort!(m)
@@ -401,24 +401,24 @@ function har_est(x::Array; m::Array=[1,5,22])
         error("The maximum lag must be the last value in the array.")
     end
 
-    X = zeros(T-mm, n+1)
-    X[:,1] = ones(T-mm, 1)
+    X = zeros(T - mm, n + 1)
+    X[:, 1] = ones(T - mm, 1)
 
     for ii = 1:n
         cm = m[ii]
-        aux = zeros(T-mm, 1)
+        aux = zeros(T - mm, 1)
         for jj = 1:cm
-            aux = aux + x[mm-jj+1:T-jj,1]
+            aux = aux + x[mm-jj+1:T-jj, 1]
         end
-        X[:,ii+1] = aux/cm
+        X[:, ii+1] = aux / cm
     end
 
-    Y = x[mm+1:T,1]
+    Y = x[mm+1:T, 1]
 
-    betas = X\Y
-    err = Y-X*betas
+    betas = X \ Y
+    err = Y - X * betas
 
-    sigma = (err'*err)/(T-mm-n-1)
+    sigma = (err' * err) / (T - mm - n - 1)
 
     return betas, sigma
 

@@ -36,15 +36,15 @@ julia> fi_forecast(figen(100,0.2), 10, 0.2)
 function fi_forecast(x::Array, h::Int, d::Real)
     T = length(x)
 
-    maxlags = T+h
+    maxlags = T + h
 
-    vars = fi_ar_coefs(d,maxlags)
+    vars = fi_ar_coefs(d, maxlags)
 
-    xfor = zeros(maxlags,1)
-    xfor[1:T,1] = x
+    xfor = zeros(maxlags, 1)
+    xfor[1:T, 1] = x
 
     for ii = T+1:maxlags
-        xfor[ii,1] = sum( reverse(xfor[1:(ii-1),1]).*vars[1:ii-1] )
+        xfor[ii, 1] = sum(reverse(xfor[1:(ii-1), 1]) .* vars[1:ii-1])
     end
 
     return xfor
@@ -77,14 +77,14 @@ julia> fi_forecast(figen(100,0.2), 10, 0.2)
 function fi_forecast(x::Array, h::Int, d::Real, σ::Real)
     T = length(x)
 
-    maxlags = T+h
+    maxlags = T + h
 
 
-    xfor = zeros(maxlags,3)
-    xfor[:,1] = fi_forecast(x,h,d)
+    xfor = zeros(maxlags, 3)
+    xfor[:, 1] = fi_forecast(x, h, d)
 
-    xfor[T+1:maxlags,2] = xfor[T+1:maxlags,1] - 2*σ*ones(maxlags-T,1)
-    xfor[T+1:maxlags,3] = xfor[T+1:maxlags,1] + 2*σ*ones(maxlags-T,1)
+    xfor[T+1:maxlags, 2] = xfor[T+1:maxlags, 1] - 2 * σ * ones(maxlags - T, 1)
+    xfor[T+1:maxlags, 3] = xfor[T+1:maxlags, 1] + 2 * σ * ones(maxlags - T, 1)
 
     return xfor
 
@@ -116,7 +116,7 @@ function fi_ar_coefs(d::Real, maxlags::Int)
 
     ar_coefs[1] = d
     for ii = 2:maxlags
-        ar_coefs[ii] = ar_coefs[ii-1]*(ii-1-d)/(ii)
+        ar_coefs[ii] = ar_coefs[ii-1] * (ii - 1 - d) / (ii)
     end
 
     return ar_coefs
@@ -148,21 +148,21 @@ julia> csa_forecast(csafigen(100,1.4,1.4), 10, 1.4, 1.4)
 function csa_forecast(x::Array, h::Int, p::Real, q::Real)
     T = length(x)
 
-    maxlags = T+h
+    maxlags = T + h
 
-    vars = csa_ma_coefs(p,q,maxlags)
+    vars = csa_ma_coefs(p, q, maxlags)
 
-    matvar = my_half_toeplitz(vars[1:T,1])
+    matvar = my_half_toeplitz(vars[1:T, 1])
 
-    errs = zeros(maxlags,1)
+    errs = zeros(maxlags, 1)
 
-    errs[1:T,1] = matvar\x
+    errs[1:T, 1] = matvar \ x
 
-    xfor = zeros(maxlags,1)
-    xfor[1:T,1] = x
+    xfor = zeros(maxlags, 1)
+    xfor[1:T, 1] = x
 
     for ii = T+1:maxlags
-        xfor[ii,1] = sum( reverse(errs[1:(ii-1),1]).*vars[1:ii-1] )
+        xfor[ii, 1] = sum(reverse(errs[1:(ii-1), 1]) .* vars[1:ii-1])
     end
 
     return xfor
@@ -195,13 +195,13 @@ julia> csa_forecast(csafigen(100,1.4,1.4), 10, 1.4, 1.4, 1.0)
 function csa_forecast(x::Array, h::Int, p::Real, q::Real, σ::Real)
     T = length(x)
 
-    maxlags = T+h
+    maxlags = T + h
 
-    xfor = zeros(maxlags,3)
-    xfor[:,1] = csa_forecast(x,h,p,q)
+    xfor = zeros(maxlags, 3)
+    xfor[:, 1] = csa_forecast(x, h, p, q)
 
-    xfor[T+1:maxlags,2] = xfor[T+1:maxlags,1] - 2*σ*ones(maxlags-T,1)
-    xfor[T+1:maxlags,3] = xfor[T+1:maxlags,1] + 2*σ*ones(maxlags-T,1)
+    xfor[T+1:maxlags, 2] = xfor[T+1:maxlags, 1] - 2 * σ * ones(maxlags - T, 1)
+    xfor[T+1:maxlags, 3] = xfor[T+1:maxlags, 1] + 2 * σ * ones(maxlags - T, 1)
 
     return xfor
 
@@ -230,7 +230,7 @@ The zero lag coefficient is included, it is theoretically 1.
 julia> csa_ma_coefs(1.4, 1.4, 5)
 ``` 
 """
-function csa_ma_coefs(p::Real , q::Real, maxlags::Int)
+function csa_ma_coefs(p::Real, q::Real, maxlags::Int)
     ma_coefs = zeros(maxlags)
 
     ma_coefs[1] = 1
@@ -294,40 +294,40 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 julia> har_forecast(figen(100,0.2), 10)
 ```
 """
-function har_forecast(x::Array, h::Int, m::Array=[1,5,22])
+function har_forecast(x::Array, h::Int, m::Array=[1, 5, 22])
     T = length(x)
-    
+
     mm = maximum(m)
     n = length(m)
 
     ## Estimation because the matrix are needed for forecasting
-    X = zeros(T-mm+h, n+1)
-    X[:,1] = ones(T-mm+h, 1)
+    X = zeros(T - mm + h, n + 1)
+    X[:, 1] = ones(T - mm + h, 1)
 
     for ii = 1:n
         cm = m[ii]
-        aux = zeros(T-mm, 1)
+        aux = zeros(T - mm, 1)
         for jj = 1:cm
-            aux = aux + x[mm-jj+1:T-jj,1]
+            aux = aux + x[mm-jj+1:T-jj, 1]
         end
-        X[1:T-mm,ii+1] = aux/cm
+        X[1:T-mm, ii+1] = aux / cm
     end
 
-    Y = zeros(T-mm+h,1)
+    Y = zeros(T - mm + h, 1)
 
-    Y[1:T-mm,1] = x[mm+1:T,1]
+    Y[1:T-mm, 1] = x[mm+1:T, 1]
 
-    betas = X[1:T-mm,:]\Y[1:T-mm,1]
-    err = Y[1:T-mm,1]-X[1:T-mm,:]*betas
+    betas = X[1:T-mm, :] \ Y[1:T-mm, 1]
+    err = Y[1:T-mm, 1] - X[1:T-mm, :] * betas
 
-    sigma = (err'*err)/(T-mm-n-1)
+    sigma = (err' * err) / (T - mm - n - 1)
 
     ## Forecasting
     for ii = 1:h
-        Y[T-mm+ii,1] = X[T-mm+ii-1,:]'*betas 
+        Y[T-mm+ii, 1] = X[T-mm+ii-1, :]' * betas
         for jj = 1:n
             cm = m[jj]
-            X[T-mm+ii,jj+1] = sum(Y[T-mm+ii-cm:T-mm+ii-1,1])/cm
+            X[T-mm+ii, jj+1] = sum(Y[T-mm+ii-cm:T-mm+ii-1, 1]) / cm
         end
     end
 
@@ -358,16 +358,16 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 julia> har_forecast(figen(100,0.2), 10, 1)
 ```
 """
-function har_forecast(x::Array, h::Int, σ::Real, m::Array=[1,5,22])
+function har_forecast(x::Array, h::Int, σ::Real, m::Array=[1, 5, 22])
     T = length(x)
 
     mm = maximum(m)
 
-    Y = zeros(T-mm+h,3)
-    Y[:,1] = har_forecast(x,h,m)
-    
-    Y[T-mm+1:T-mm+h,2] = Y[T-mm+1:T-mm+h,1] - 2*σ*ones(h,1)
-    Y[T-mm+1:T-mm+h,3] = Y[T-mm+1:T-mm+h,1] + 2*σ*ones(h,1)
+    Y = zeros(T - mm + h, 3)
+    Y[:, 1] = har_forecast(x, h, m)
+
+    Y[T-mm+1:T-mm+h, 2] = Y[T-mm+1:T-mm+h, 1] - 2 * σ * ones(h, 1)
+    Y[T-mm+1:T-mm+h, 3] = Y[T-mm+1:T-mm+h, 1] + 2 * σ * ones(h, 1)
 
     return Y
 

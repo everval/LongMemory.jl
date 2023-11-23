@@ -16,7 +16,7 @@ export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen, fi
 
 include("LogPeriodEstimators.jl")
 using .LogPeriodEstimators
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram, periodogram_plot
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators
