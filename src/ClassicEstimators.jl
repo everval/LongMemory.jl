@@ -102,7 +102,6 @@ function autocorrelation_plot(x::Array,k::Int=30)
     
     p1 = plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle)
 
-    display(p1)
     return p1
 end
 
@@ -117,7 +116,6 @@ Computes the variance plot of a time series and estimates the Hurst coefficient.
 
 # Output
 - `d_var::Real`: The estimated long memory parameter computed as (beta+1)/2, where beta is the slope of the linear regression of the log of the variance plot.
-- `p1::Plots.Plot`: The variance plot if flag is true.
 
 # Optional arguments
 - `flag::Bool`: If true, the variance plot is displayed.

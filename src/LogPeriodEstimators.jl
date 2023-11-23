@@ -36,7 +36,7 @@ Plots the log-periodogram of a time series `x`.
 julia> periodogram_plot(randn(100,1))
 ```
 """
-function periodogram_plot(x::Array; slope::Bool=true)
+function periodogram_plot(x::Array; slope::Bool=false)
     T = length(x)
 
     I_wc, wc = periodogram(x)
@@ -51,8 +51,6 @@ function periodogram_plot(x::Array; slope::Bool=true)
         beta = X \ log.(I_w)
         plot!(w, w .^ beta[2], xaxis=:log, yaxis=:log, line=:dash, label=string("Slope = ", beta[2]))
     end
-
-    display(p1)
 
     return p1
 end
