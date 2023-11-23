@@ -51,7 +51,7 @@ end
 
 
 """
-    autocorrelation(x::Array, k::Int; flag::Bool=true)
+    autocorrelation(x::Array, k::Int; flag::Bool=false)
 
 Computes the autocorrelation function of a time series.
 
