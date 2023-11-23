@@ -11,7 +11,7 @@ module ClassicEstimators
 
 using Plots
 
-export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation, autocorrelation_plot
+export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation, autocorrelation_plot, sstdk
 
 
 """
@@ -128,9 +128,9 @@ This function uses the linear regression method on the log of the variance plot 
 julia> variance_plot(randn(100))
 ```
 """
-function variance_plot(x::Array; flag::Bool=true, slope::Bool=true)
+function variance_plot(x::Array; flag::Bool=true, slope::Bool=false)
     T = length(x)
-    k = floor(Int, T / 2)
+    k = floor(Int, T / 2) - 1
 
     Y = zeros(k - 1, 1)
 
@@ -138,13 +138,14 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=true)
         Y[ii-1, 1] = sstdk(x, ii)
     end
 
-    X = [ones(k - 1, 1) collect(2:k)]
-    beta = log.(X) \ log.(Y)
+    X = [ones(k - 1, 1) log.(collect(2:k))]
+    Y = log.(Y)
+    beta = X \ Y
 
     if flag == true
-        p1 = plot(X[:, 2], Y, line=:scatter, xaxis=:log, yaxis=:log, label="", title="Variance Plot", xlabel="log-sampling", ylabel="log-variance")
+        p1 = plot(X[:, 2], Y, line=:scatter, label="", title="Variance Plot", xlabel="log-sampling", ylabel="log-variance")
         if slope == true
-            plot!(X[:, 2], X[:, 2] .^ beta[2], xaxis=:log, yaxis=:log, line=:dash, label=string("Slope = ", beta[2]))
+            plot!(X[:, 2], X*beta, line=:dash, label=string("Slope = ", beta[2]))
         end
         display(p1)
     end
@@ -175,7 +176,6 @@ julia> sstdk(randn(100), 2)
 """
 function sstdk(x::Array, k::Int=1)
     T = length(x)
-    μ = smean(x)
 
     if k >= T
         error("k must be less than T")
@@ -189,6 +189,8 @@ function sstdk(x::Array, k::Int=1)
     for ii = 1:m-1
         Y[ii, 1] = smean(x[nt[ii]:nt[ii+1]])
     end
+
+    μ = smean(Y)
 
     s2k = sum((Y .- μ) .^ 2) / (m - 1)
 
