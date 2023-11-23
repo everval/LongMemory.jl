@@ -11,11 +11,78 @@ module ClassicEstimators
 
 using Plots
 
-export rescaled_range_est, rescaled_range, sstd, smean, variance_plot
+export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation
+
+
+"""
+    autocovariance(x::Array, k::Int)
+    
+Computes the autocovariance of a time series.
+
+# Arguments
+- `x::Array`: The time series.
+- `k::Int`: The lag of the autocovariance.
+
+# Output
+- `acv::Array`: The autocovariance.
+
+# Examples    
+```julia
+julia> autocovariance(randn(100), 2)
+```
+"""
+function autocovariance(x::Array, k::Int)
+    T = length(x)
+    μ = smean(x)
+
+    if k >= T
+        error("k must be less than T")
+    end
+
+    acv = zeros(k, 1)
+
+    for ii = 0:k-1
+        acv[ii+1, 1] = sum((x[1:T-ii] .- μ) .* (x[ii+1:T] .- μ)) / (T - ii)
+    end
+
+    return acv
+
+end
+
+
+"""
+    autocorrelation(x::Array, k::Int; flag::Bool=true)
+
+Computes the autocorrelation function of a time series.
+
+# Arguments
+- `x::Array`: The time series.
+- `k::Int`: The lag of the autocorrelation.
+
+# Output
+- `acf::Array`: The autocorrelation function.
+
+# Optional arguments
+- `flag::Bool`: If true, the autocorrelation function is displayed.
+
+# Examples    
+```julia
+julia> autocorrelation(randn(100), 10)
+```
+"""
+function autocorrelation(x::Array,k::Int=30;flag::Bool=false)
+    acv = autocovariance(x,k)
+    acf = acv./acv[1]
+    if flag == true
+        display(plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle))
+    end
+    return acf
+end
+
 
 """
     variance_plot(x::Array; flag::Bool=true, slope::Bool=true)
-
+    
 Computes the variance plot of a time series and estimates the Hurst coefficient.
 
 # Arguments
