@@ -53,7 +53,7 @@ function periodogram_plot(x::Array; slope::Bool=false)
         oldylims = ylims(p1)
         X = [ones(length(w)) log.(w)]
         beta = X \ log.(I_w)
-        plot!(log.(w), X*beta, line=:dash, label=string("Slope = ", beta[2]), linewidth = 3)
+        plot!(log.(w), X*beta, line=:dash, label=string("Slope = ", round(beta[2],digits=4)), linewidth = 3)
         ylims!(p1, oldylims)
     end
 
