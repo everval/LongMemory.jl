@@ -143,7 +143,7 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=false, slope2::Boo
     beta = X \ Y
 
     if flag == true
-        p1 = plot(X[:, 2], Y, line=:scatter, label="", title="Variance Plot", xlabel="log-sampling", ylabel="log-variance")
+        p1 = plot(X[:, 2], Y, line=:scatter, label="", xlabel="log-sampling", ylabel="log-variance")
         if slope == true
             oldylims = ylims(p1)
             plot!(X[:, 2], X*beta, line=:dash, label=string("Slope = ", round(beta[2],digits=4)), linewidth = 3 )
