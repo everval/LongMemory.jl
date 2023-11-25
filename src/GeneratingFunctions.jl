@@ -156,7 +156,6 @@ julia> csa_gen(100,1.2,1.4)
 """
 function csa_gen(T::Int, p, q; μ=0, σ=1)
     x = csadiff(rand(Normal(μ, σ), T), p, q)
-
     return x
 end
 

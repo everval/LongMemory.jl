@@ -74,7 +74,7 @@ function autocorrelation(x::Array,k::Int=30;flag::Bool=false)
     acv = autocovariance(x,k)
     acf = acv./acv[1]
     if flag == true
-        display(plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle))
+        display(plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autocorrelation function", legend = false, marker = :circle))
     end
     return acf
 end
@@ -100,7 +100,7 @@ function autocorrelation_plot(x::Array,k::Int=30)
     acv = autocovariance(x,k)
     acf = acv./acv[1]
     
-    p1 = plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autcorrelation function", legend = false, marker = :circle)
+    p1 = plot(acf, line = :stem , xlabel = "Lags", ylabel = "Autocorrelation function", legend = false, marker = :circle)
 
     return p1
 end
@@ -128,7 +128,7 @@ This function uses the linear regression method on the log of the variance plot 
 julia> variance_plot(randn(100))
 ```
 """
-function variance_plot(x::Array; flag::Bool=true, slope::Bool=false)
+function variance_plot(x::Array; flag::Bool=true, slope::Bool=false, slope2::Bool=false)
     T = length(x)
     k = floor(Int, T / 2) - 1
 
@@ -145,7 +145,14 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=false)
     if flag == true
         p1 = plot(X[:, 2], Y, line=:scatter, label="", title="Variance Plot", xlabel="log-sampling", ylabel="log-variance")
         if slope == true
-            plot!(X[:, 2], X*beta, line=:dash, label=string("Slope = ", beta[2]))
+            oldylims = ylims(p1)
+            plot!(X[:, 2], X*beta, line=:dash, label=string("Slope = ", beta[2]), linewidth = 3 )
+            ylims!(p1, oldylims)
+        end
+        if slope2 == true
+            oldylims = ylims(p1)
+            plot!(X[:, 2], X*[beta[1]; -1], line=:dash, label="Slope = -1", linewidth = 3 )
+            ylims!(p1, oldylims)
         end
         display(p1)
     end

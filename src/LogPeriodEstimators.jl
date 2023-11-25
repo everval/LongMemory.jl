@@ -44,12 +44,17 @@ function periodogram_plot(x::Array; slope::Bool=false)
     I_w = I_wc[2:end]
     w = wc[2:end]
 
-    p1 = plot(w, I_w, xlabel="log-frequency", ylabel="log-periodogram", label="", xaxis=:log, yaxis=:log, line=:scatter)
+    if slope == false
+        p1 = plot(w, I_w, xlabel="log-frequency", ylabel="log-periodogram", label="", xaxis=:log, yaxis=:log, line=:scatter)
+    end
 
     if slope == true
+        p1 = plot(log.(w), log.(I_w), xlabel="log-frequency", ylabel="log-periodogram", label="", line=:scatter)
+        oldylims = ylims(p1)
         X = [ones(length(w)) log.(w)]
         beta = X \ log.(I_w)
-        plot!(w, w .^ beta[2], xaxis=:log, yaxis=:log, line=:dash, label=string("Slope = ", beta[2]))
+        plot!(log.(w), X*beta, line=:dash, label=string("Slope = ", beta[2]), linewidth = 3)
+        ylims!(p1, oldylims)
     end
 
     return p1

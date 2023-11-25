@@ -16,6 +16,7 @@ makedocs(
     ),
     pages=[
         "Home" => "about.md",
+        "Plotting" => "plotting.md",
         "Generating Functions" => "generating.md",
         "Log-Periodogram Estimation" => "logperiod.md",
         "Parameter Estimation" => "parametric.md",
