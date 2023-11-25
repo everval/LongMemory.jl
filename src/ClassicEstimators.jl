@@ -151,7 +151,7 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=false, slope2::Boo
         end
         if slope2 == true
             oldylims = ylims(p1)
-            plot!(X[:, 2], X*[beta[1]; -1], line=:dash, label="Slope = -1", linewidth = 3 )
+            plot!(X[:, 2], X*[beta[1]; -1], line=:dashdot, label="Slope = -1", linewidth = 3 )
             ylims!(p1, oldylims)
         end
         display(p1)
