@@ -4,6 +4,7 @@
 This module contains functions to forecast a long memory time series using the fractional differencing method and the CSA method.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """

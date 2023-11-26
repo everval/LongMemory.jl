@@ -7,9 +7,11 @@ CurrentModule = LongMemory
 Documentation for [LongMemory.jl](https://github.com/everval/LongMemory.jl).
 
 ## Description
+
 This package implements functions to generate and estimate time series long memory models.
 
 ## Installation
+
 The package is registered in the Julia registry and can be installed at the REPL with `] add LongMemory`.
 
 ## Generation
@@ -40,9 +42,10 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Data Available](@ref) contains the list of data sets available in the package.
 
-
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 ## Report a bug
+
 Please, report any bugs [here](mailto: eduardo@math.aau.dk).

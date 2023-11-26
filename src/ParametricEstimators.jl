@@ -4,6 +4,7 @@
 This module contains functions for estimating the parameters of the fractional differenced process à la ARFIMA and the CSA process.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """

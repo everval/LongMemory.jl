@@ -4,6 +4,7 @@
 This module contains functions to estimate them Hurst coefficient, closely related to the long memory parameter, of a time series using the rescaled range (R/S) statistic.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """
@@ -142,6 +143,12 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=false, slope2::Boo
     Y = log.(Y)
     beta = X \ Y
 
+    d_var = (beta[2] + 1) / 2
+
+    if flag == false
+        return d_var
+    end
+    
     if flag == true
         p1 = plot(X[:, 2], Y, line=:scatter, label="", xlabel="log-sampling", ylabel="log-variance")
         if slope == true
@@ -154,12 +161,8 @@ function variance_plot(x::Array; flag::Bool=true, slope::Bool=false, slope2::Boo
             plot!(X[:, 2], X*[beta[1]; -1], line=:dashdot, label="Slope = -1", linewidth = 3 )
             ylims!(p1, oldylims)
         end
-        display(p1)
+        return p1, d_var
     end
-
-    d_var = (beta[2] + 1) / 2
-
-    return d_var
 
 end
 

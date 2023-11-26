@@ -4,6 +4,7 @@
 This module contains functions to estimate the long memory parameter of a time series using the log-periodogram estimator and the Whittle log-likelihood function.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """

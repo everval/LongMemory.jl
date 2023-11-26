@@ -4,6 +4,7 @@
 This package provides functions for generating and estimating the long memory parameter d of a time series.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """
@@ -13,6 +14,9 @@ include("GeneratingFunctions.jl")
 using .GeneratingFunctions
 export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
 
+include("DataExamples.jl")
+using .DataExamples
+export NileData, NHTempData, NileDataPlot, NHTempDataPlot, LMPlot
 
 include("LogPeriodEstimators.jl")
 using .LogPeriodEstimators

@@ -5,6 +5,7 @@ This module contains functions to generate time series with long memory.
 
 
 ## Author
+
 - [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """
