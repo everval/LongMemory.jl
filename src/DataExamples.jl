@@ -89,7 +89,7 @@ function NileDataPlot()
     p4 = variance_plot(data.NileMin)[1]
 
     pp = plot(p1, p2, p3, p4, layout=l)
-    display(p1)
+
     return pp
 end
 
@@ -126,7 +126,7 @@ function NHTempDataPlot()
     p4 = variance_plot(data.NHTemp)[1]
 
     pp = plot(p1, p2, p3, p4, layout=l)
-    display(p1)
+
     return pp
 end
 
@@ -164,7 +164,7 @@ function LMPlot(x::Array;lags::Int=50,name::String="Time series")
     p4 = variance_plot(x)[1]
 
     pp = plot(p1, p2, p3, p4, layout=l)
-    display(p1)
+
     return pp
 end
 
