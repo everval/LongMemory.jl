@@ -210,7 +210,7 @@ end
 
 
 """
-    rescaled_range_est(x::Array)
+    rescaled_range_est(x::Array; k::Int = 20)
 
 Estimates the long memory parameter of a time series using the rescaled range (R/S) statistic.
 
@@ -219,6 +219,9 @@ Estimates the long memory parameter of a time series using the rescaled range (R
 
 # Output
 - `d::Real`: The estimated long memory parameter.
+
+# Optional arguments
+- `k::Int`: The number of partitions of the time series. Default is 20.
 
 # Notes
 This function uses the linear regression method on the log of the rescaled range to estimate the long memory parameter.
@@ -258,7 +261,7 @@ Computes the rescaled range (R/S) statistic of a time series.
 - `x::Array`: The time series.
 
 # Optional arguments
-- `k::Int`: The number of partitions of the time series.
+- `k::Int`: The number of partitions of the time series. Default is 20.
 
 # Output
 - `RS::Array`: The rescaled range statistic.
