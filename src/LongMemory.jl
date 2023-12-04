@@ -28,7 +28,7 @@ export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals,
 
 include("ClassicEstimators.jl")
 using .ClassicEstimators
-export rescaled_range_est, rescaled_range, sstd, smean, variance_plot, autocovariance, autocorrelation, autocorrelation_plot, sstdk
+export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk, rescaled_range_est, rescaled_range,  variance_plot, variance_plot_est 
 
 include("Forecasters.jl")
 using .Forecasters
