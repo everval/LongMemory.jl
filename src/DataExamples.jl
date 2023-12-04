@@ -86,7 +86,7 @@ function NileDataPlot()
     p2 = autocorrelation_plot(data.NileMin,50)
     ylabel!(p2, "Autocorrelation")
     p3 = periodogram_plot(data.NileMin)
-    p4 = variance_plot(data.NileMin)[1]
+    p4 = variance_plot(data.NileMin;m=200)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 
@@ -123,7 +123,7 @@ function NHTempDataPlot()
     p2 = autocorrelation_plot(data.NHTemp,50)
     ylabel!(p2, "Autocorrelation") # This is how you add a
     p3 = periodogram_plot(data.NHTemp)
-    p4 = variance_plot(data.NHTemp)[1]
+    p4 = variance_plot(data.NHTemp;m=500)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 
@@ -161,7 +161,7 @@ function LMPlot(x::Array;lags::Int=50,name::String="Time series")
     p2 = autocorrelation_plot(x,lags)
     ylabel!(p2, "Autocorrelation")
     p3 = periodogram_plot(x)
-    p4 = variance_plot(x)[1]
+    p4 = variance_plot(x;m=floor(Int,length(x)/2)-1)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 

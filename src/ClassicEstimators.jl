@@ -150,10 +150,6 @@ function variance_plot(x::Array; m::Int=20, slope::Bool=false, slope2::Bool=fals
     Z = log.(Y)
     beta = X \ Z
 
-    d_var = ( beta[2] + 1 ) / 2
-
-    display(d_var)
-
     p1 = plot(X[:,2], Z, line=:scatter, label="", xlabel="log-sampling", ylabel="log-variance")
     if slope == true
         oldylims = ylims(p1)
