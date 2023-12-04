@@ -212,16 +212,16 @@ end
 """
     rescaled_range_est(x::Array)
 
-Estimates the Hurst coefficient of a time series using the rescaled range (R/S) statistic.
+Estimates the long memory parameter of a time series using the rescaled range (R/S) statistic.
 
 # Arguments
 - `x::Array`: The time series.
 
 # Output
-- `H::Real`: The estimated Hurst coefficient.
+- `d::Real`: The estimated long memory parameter.
 
 # Notes
-This function uses the linear regression method on the log of the rescaled range to estimate the Hurst coefficient.
+This function uses the linear regression method on the log of the rescaled range to estimate the long memory parameter.
 The Hurst coefficient is related to the long memory parameter d by the formula H = d + 1/2.
 
 # Examples    
@@ -229,28 +229,36 @@ The Hurst coefficient is related to the long memory parameter d by the formula H
 julia> rescaled_range_est(randn(100))
 ```
 """
-function rescaled_range_est(x::Array)
+function rescaled_range_est(x::Array; k::Int = 20)
     T = length(x)
 
-    RS = rescaled_range(x)
+    RS = rescaled_range(x; k = k)
+
+    step = round(Int, T / k)
+
+    position = collect(1:step:T)
+    popfirst!(position)
 
     Y = log.(RS)
 
-    X = [ones(T - 1, 1) log.(collect(2:T))]
+    X = [ones(length(Y), 1) log.(position)]
 
     beta = X \ Y
 
-    return beta[2]
+    return beta[2] - 1/2
 end
 
 
 """
-    rescaled_range(x::Array)
+    rescaled_range(x::Array; k::Int = 20)
 
 Computes the rescaled range (R/S) statistic of a time series.
 
 # Arguments
 - `x::Array`: The time series.
+
+# Optional arguments
+- `k::Int`: The number of partitions of the time series.
 
 # Output
 - `RS::Array`: The rescaled range statistic.
@@ -260,23 +268,33 @@ Computes the rescaled range (R/S) statistic of a time series.
 julia> rescaled_range(randn(100))
 ```
 """
-function rescaled_range(x::Array)
+function rescaled_range(x::Array; k::Int = 20)
     T = length(x)
+
+    if k >= T
+        error("k must be less than T")
+    end
 
     μ = smean(x)
 
     Y = x .- μ
     Z = cumsum(Y, dims=1)
 
-    RS = zeros(T - 1, 1)
+    step = round(Int, T / k)
 
-    for ii = 2:T
-        RS[ii-1, 1] = (maximum(Z[1:ii]) - minimum(Z[1:ii])) / sstd(x[1:ii])
+    position = collect(1:step:T)
+    popfirst!(position)
+
+    RS = zeros(length(position), 1)
+
+    for ii = 1:length(position)
+        RS[ii, 1] = (maximum(Z[1:position[ii]]) - minimum(Z[1:position[ii]]) )
     end
+
+    RS = RS./sstd(x; k=1)
 
     return RS
 end
-
 
 """
     sstd(x::Array; k::Int=0)
