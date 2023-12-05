@@ -18,9 +18,9 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Long Memory Generation](@ref) contains the documentation for the functions to generate time series long memory models.
 
-## Log-Periodogram-Based Estimators
+## Semiparametric Estimators
 
-[Log-Periodogram-Based Estimators for Long Memory](@ref) contains the documentation for the functions to estimate the long memory parameter based on the log-periodogram regression. Estimators include the Geweke and Porter-Hudak estimators and the Whittle estimator, as well as bias-reduced versions of them.
+[Semiparametric Estimators for Long Memory](@ref) contains the documentation for the functions to estimate the long memory parameter based on the log-periodogram regression. Estimators include the Geweke and Porter-Hudak estimators and the Whittle estimator, as well as bias-reduced versions of them.
 
 ## Parametric Estimation
 
