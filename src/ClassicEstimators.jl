@@ -12,7 +12,7 @@ module ClassicEstimators
 
 using Plots
 
-export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk, rescaled_range_est, rescaled_range, variance_plot, variance_plot_est
+export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk, rescaled_range_est, rescaled_range, rescaled_range_plot, variance_plot, variance_plot_est
 
 
 """
@@ -294,6 +294,67 @@ function rescaled_range_est(x::Array; k::Int=20)
     beta = X \ Y
 
     return beta[2] - 1 / 2
+end
+
+
+"""
+    rescaled_range_plot(x::Array; k::Int = 100, slope::Bool = false, slope2::Bool = false)
+
+Produces the rescaled range plot of a time series.
+
+# Arguments
+- `x::Array`: The time series.
+
+# Output
+- `p1::Plots.Plot`: The rescaled range plot.
+
+# Optional arguments
+- `k::Int`: The number of partitions of the time series. Default is 100.
+- `slope::Bool`: If true, the slope of the linear regression is displayed.
+- `slope2::Bool`: If true, the theoretical slope for a short memory process is displayed.
+
+# Notes
+This function uses the linear regression method on the log of the rescaled range to estimate the long memory parameter.
+The Hurst coefficient is related to the long memory parameter d by the formula H = d + 1/2.
+
+# Examples    
+```julia
+julia> rescaled_range_plot(randn(300,1))
+```
+"""
+function rescaled_range_plot(x::Array; k::Int = 100, slope = false, slope2 = false)
+    T = length(x)
+
+    if k >= T
+        error("k must be less than T")
+    end
+
+    RS = rescaled_range(x; k=k)
+
+    step = round(Int, T / k)
+
+    position = collect(1:step:T)
+    popfirst!(position)
+
+    Y = log.(RS)
+
+    X = [ones(length(Y), 1) log.(position)]
+
+    beta = X \ Y
+
+    p1 = plot(X[:,2], Y, line=:scatter, label="", xlabel="log-sampling", ylabel="log-rescaled range")
+    if slope == true
+        oldylims = ylims(p1)
+        plot!(X[:,2], X * beta, line=:dash, label=string("Slope = ", round(beta[2], digits=4)), linewidth=3)
+        ylims!(p1, oldylims)
+    end
+    if slope2 == true
+        oldylims = ylims(p1)
+        plot!(X[:,2], X *  [beta[1]; 0.5], line=:dashdot, label="Slope = 0.500", linewidth=3)
+        ylims!(p1, oldylims)
+    end
+    return p1
+
 end
 
 
