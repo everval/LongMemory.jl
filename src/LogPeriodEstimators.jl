@@ -15,7 +15,7 @@ import .GeneratingFunctions: fracdiff
 
 using FFTW, Optim, Plots
 
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, periodogram, periodogram_plot
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot
 
 
 """
@@ -456,6 +456,61 @@ function exact_whittle_est(x::Array; m=0.5, l=0)
     whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
 
     return whittle.minimizer[1]
+end
+
+
+"""
+    exact_whittle_est_variance(x::Array; m=0.5)
+
+Estimate the variance of the estimator for the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. 
+
+# Arguments
+- `x::Vector`: time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+
+# Output
+- `varb::Float64`: variance of the estimator
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+The variance is the same as the one from using the Whittle log-likelihood function.
+
+# Examples
+```julia-repl
+julia> exact_whittle_est_variance(fi(100,0.4))
+```
+"""
+function exact_whittle_est_variance(x::Array; m=0.5)
+    return whittle_est_variance(x; m=m)
+end
+
+""" 
+    exact_whittle_est_variance(T::Int;m=0.5
+
+Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the exaxct Whittle log-likelihood function.
+
+# Arguments
+- `T::Int`: length of the time series
+
+# Optional arguments
+- `m∈(0,1)::Float64`: taper final
+
+# Output
+- `varb::Float64`: variance of the estimator
+
+# Notes
+Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
+The variance is the same as the one from using the Whittle log-likelihood function.
+
+# Examples
+```julia-repl
+julia> exact_whittle_est_variance(100,0.4)
+```
+"""
+function exact_whittle_est_variance(T::Int; m=0.5)
+    return whittle_est_variance(T; m=m)
 end
 
 end # module
