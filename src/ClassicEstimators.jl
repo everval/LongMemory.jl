@@ -397,10 +397,8 @@ function rescaled_range(x::Array; k::Int=20)
     RS = zeros(length(position), 1)
 
     for ii = 1:length(position)
-        RS[ii, 1] = (maximum(Z[1:position[ii]]) - minimum(Z[1:position[ii]]))
+        RS[ii, 1] = (maximum(Z[1:position[ii]]) - minimum(Z[1:position[ii]])) / sstd(x[1:position[ii]])
     end
-
-    RS = RS ./ sstd(x; k=1)
 
     return RS
 end
