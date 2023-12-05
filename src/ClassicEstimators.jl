@@ -12,7 +12,7 @@ module ClassicEstimators
 
 using Plots
 
-export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk, rescaled_range_est, rescaled_range, rescaled_range_plot, variance_plot, variance_plot_est
+export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk, rescaled_range_est, rescaled_range, rescaled_range_plot, log_variance_plot, log_variance_est
 
 
 """
@@ -108,9 +108,9 @@ end
 
 
 """
-    variance_plot(x::Array; m::Int=20, slope::Bool=false, slope2::Bool=false)
+    log_variance_plot(x::Array; m::Int=100, slope::Bool=false, slope2::Bool=false)
     
-Produces the variance plot of a time series.
+Produces the log-variance plot of a time series.
 
 # Arguments
 - `x::Array`: The time series.
@@ -127,10 +127,10 @@ Produces the variance plot of a time series.
 This function uses the linear regression method on the log of the variance plot to estimate the long memory parameter.
 # Examples    
 ```julia
-julia> variance_plot(randn(100,1); m = 40)
+julia> log_variance_plot(randn(100,1); m = 40)
 ```
 """
-function variance_plot(x::Array; m::Int=20, slope::Bool=false, slope2::Bool=false)
+function log_variance_plot(x::Array; m::Int=100, slope::Bool=false, slope2::Bool=false)
     T = length(x)
     if m >= T
         error("m must be less than T")
@@ -167,27 +167,27 @@ end
 
 
 """
-    variance_plot_est(x::Array; m::Int=20)
+    log_variance_est(x::Array; m::Int=200)
     
-Computes the long memory estimate using the variance plot.
+Computes the long memory estimate using the log-variance.
 
 # Arguments
 - `x::Array`: The time series.
 
 # Output
-- `d_var::Real`: The estimated long memory parameter computed as (beta+1)/2, where beta is the slope of the linear regression of the log of the variance plot.
+- `d_var::Real`: The estimated long memory parameter computed as (beta+1)/2, where beta is the slope of the linear regression of the log-variance plot.
 
 # Optional arguments
 - `m::Int`: The number of partitions of the time series. Default is 20. A value of m ≈ length(x)/2 is recommended.
 
 # Notes
-This function uses the linear regression method on the log of the variance plot to estimate the long memory parameter.
+This function uses the linear regression method on the log-variance to estimate the long memory parameter.
 # Examples    
 ```julia
-julia> variance_plot_est(randn(100,1); m = 40)
+julia> log_variance_est(randn(100,1); m = 40)
 ```
 """
-function variance_plot_est(x::Array; m::Int=20)
+function log_variance_est(x::Array; m::Int=100)
     T = length(x)
     if m >= T
         error("m must be less than T")
