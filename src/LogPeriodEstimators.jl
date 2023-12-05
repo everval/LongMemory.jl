@@ -414,7 +414,7 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
     last = round(Int, T^m)
     first = max(round(Int, T^l), 2)
 
-    dx = fracdiff(x, -d)
+    dx = fracdiff(x, d)
 
     I_w, w = periodogram(dx)
 
