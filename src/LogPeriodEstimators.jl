@@ -272,10 +272,10 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
     first = max(round(Int, T^l), 2)
     last = round(Int, T^m)
 
-    I_w, w = periodogram(x)
+    I_w0, w0 = periodogram(x)
 
-    I_w = I_w[first:last]
-    w = w[first:last]
+    I_w = I_w0[first:last]
+    w = w0[first:last]
 
     G = sum(I_w .* (w .^ (2 * d))) / length(w)
     Q = log(G) - 2 * d * sum(log.(w)) / length(w)
@@ -416,10 +416,10 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
 
     dx = fracdiff(x, d)
 
-    I_w, w = periodogram(dx)
+    I_w0, w0 = periodogram(dx)
 
-    I_w = I_w[first:last]
-    w = w[first:last]
+    I_w = I_w0[first:last]
+    w = w0[first:last]
 
     G = sum(I_w) / length(w)
     Q = log(G) - 2 * d * sum(log.(w)) / length(w)
