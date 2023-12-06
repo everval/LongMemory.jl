@@ -401,6 +401,7 @@ Compute the exact Whittle log-likelihood function of a time series `x` for a giv
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The condition `m < l` must hold.
 The default values of `m` and `l` are 0.5 and 0, respectively.
+The function demeans the time series `x` for long memory estimation.
 
 # Examples
 ```julia-repl
@@ -455,6 +456,7 @@ julia> exact_whittle_est(randn(100,1))
 ```
 """
 function exact_whittle_est(x::Array; m=0.5, l=0)
+    x = x .- smean(x)
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
 
