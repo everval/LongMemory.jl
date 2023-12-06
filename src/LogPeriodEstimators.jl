@@ -95,7 +95,7 @@ end
 
 
 """
-    gph_est(x::Array; m=0.5, l=0, br=0::Int)
+    gph_est(x::Array; m::Real=0.8, l=0, br=0::Int)
 
 Estimate the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -110,7 +110,7 @@ Estimate the long memory parameter of a time series `x` using the log-periodogra
 
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
-The default values of `m` and `l` are 0.5 and 0, respectively.
+The default values of `m` and `l` are 0.8 and 0, respectively.
 The condition `m < l` must hold.
 
 The default value of `br` is 0 which returns the original GPH log-periodogram estimator.
@@ -120,7 +120,7 @@ The default value of `br` is 0 which returns the original GPH log-periodogram es
 julia> gph_est(randn(100,1))
 ```
 """
-function gph_est(x::Array; m=0.5, l=0, br=0::Int)
+function gph_est(x::Array; m::Real=0.8, l=0, br=0::Int)
     T = length(x)
 
     if m < l
@@ -144,7 +144,7 @@ end
 
 
 """
-    gph_est_variance(x::Array; m=0.5, l=0, br=0::Int)
+    gph_est_variance(x::Array; m::Real=0.8, l=0, br=0::Int)
 
 Estimate the variance of the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -152,7 +152,7 @@ Estimate the variance of the long memory parameter of a time series `x` using th
 - `x::Vector`: time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 - `br::Int64`: number of bias reduction terms
 
 # Output
@@ -166,7 +166,7 @@ Multiple dispatch is used for computation. If the first input is an integer, the
 julia> gph_est_variance(fi(100,0.4))
 ```
 """
-function gph_est_variance(x::Array; m=0.5, br=0::Int)
+function gph_est_variance(x::Array; m::Real=0.8, br=0::Int)
     T = length(x)
     last = round(Int, T^m)
 
@@ -193,7 +193,7 @@ function gph_est_variance(x::Array; m=0.5, br=0::Int)
 end
 
 """
-    gph_est_variance(T::Int; m=0.5, l=0, br=0::Int)
+    gph_est_variance(T::Int; m::Real=0.8, l=0, br=0::Int)
 
 Estimate the variance of the long memory parameter of a time series of length `T` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -201,7 +201,7 @@ Estimate the variance of the long memory parameter of a time series of length `T
 - `T::Int`: length of the time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 - `br::Int64`: number of bias reduction terms
 
 # Output
@@ -215,7 +215,7 @@ Multiple dispatch is used for computation. If the first input is an integer, the
 julia> gph_est_variance(100,0.4)
 ```
 """
-function gph_est_variance(T::Int; m=0.5, br=0::Int)
+function gph_est_variance(T::Int; m::Real=0.8, br=0::Int)
     last = round(Int, T^m)
 
     if br == 0
@@ -241,7 +241,7 @@ function gph_est_variance(T::Int; m=0.5, br=0::Int)
 end
 
 """
-    whittle_llk(d, x::Array; m=0.5, l=0)
+    whittle_llk(d, x::Array; m::Real=0.8, l=0)
 
 Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See Künsch (1987) for details.
 
@@ -257,14 +257,14 @@ Compute the Whittle log-likelihood function of a time series `x` for a given lon
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The condition `m < l` must hold. 
-The default values of `m` and `l` are 0.5 and 0, respectively.
+The default values of `m` and `l` are 0.8 and 0, respectively.
 
 # Examples
 ```julia-repl
 julia> whittle_llk(0.4,randn(100,1))
 ```
 """
-function whittle_llk(d, x::Array; m=0.5, l=0)
+function whittle_llk(d, x::Array; m::Real=0.8, l=0)
 
     T = length(x)
 
@@ -288,7 +288,7 @@ end
 
 
 """
-    whittle_est(x::Array; m=0.5, l=0)
+    whittle_est(x::Array; m::Real=0.8, l=0)
 
 Estimate the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
@@ -303,14 +303,14 @@ Estimate the long memory parameter of a time series `x` using the Whittle log-li
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The condition `m < l` must hold.
-The default values of `m` and `l` are 0.5 and 0, respectively.
+The default values of `m` and `l` are 0.8 and 0, respectively.
 
 # Examples
 ```julia-repl
 julia> whittle_est(randn(100,1))
 ```
 """
-function whittle_est(x::Array; m=0.5, l=0)
+function whittle_est(x::Array; m::Real=0.8, l=0)
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d -> whittle_llk(first(d), x; m=m, l=l), [d0])
 
@@ -318,7 +318,7 @@ function whittle_est(x::Array; m=0.5, l=0)
 end
 
 """
-    whittle_est_variance(x::Array; m=0.5)
+    whittle_est_variance(x::Array; m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
@@ -326,21 +326,21 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 - `x::Vector`: time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 
 # Output
 - `varb::Float64`: variance of the estimator
 
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
-    The variance is the same as the one from using the exact Whittle log-likelihood function.
+The variance is the same as the one from using the exact Whittle log-likelihood function.
 
 # Examples
 ```julia-repl
 julia> whittle_est_variance(fi(100,0.4))
 ```
 """
-function whittle_est_variance(x::Array; m=0.5)
+function whittle_est_variance(x::Array; m::Real=0.8)
     T = length(x)
     last = round(Int, T^m)
 
@@ -351,7 +351,7 @@ function whittle_est_variance(x::Array; m=0.5)
 end
 
 """ 
-    whittle_est_variance(T::Int;m=0.5
+    whittle_est_variance(T::Int;m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
@@ -359,7 +359,7 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 - `T::Int`: length of the time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 
 # Output
 - `varb::Float64`: variance of the estimator
@@ -373,7 +373,7 @@ The variance is the same as the one from using the exact Whittle log-likelihood 
 julia> whittle_est_variance(100,0.4)
 ```
 """
-function whittle_est_variance(T::Int; m=0.5)
+function whittle_est_variance(T::Int; m::Real=0.8)
     last = round(Int, T^m)
 
     cr = 1
@@ -384,7 +384,7 @@ end
 
 
 """
-    exact_whittle_llk(d, x::Array; m=0.5, l=0)
+    exact_whittle_llk(d, x::Array; m::Real=0.8, l=0)
 
 Compute the exact Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
@@ -400,7 +400,7 @@ Compute the exact Whittle log-likelihood function of a time series `x` for a giv
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The condition `m < l` must hold.
-The default values of `m` and `l` are 0.5 and 0, respectively.
+The default values of `m` and `l` are 0.8 and 0, respectively.
 The function demeans the time series `x` for long memory estimation.
 
 # Examples
@@ -408,7 +408,7 @@ The function demeans the time series `x` for long memory estimation.
 julia> exact_whittle_llk(0.4,randn(100,1))
 ```
 """
-function exact_whittle_llk(d, x::Array; m=0.5, l=0)
+function exact_whittle_llk(d, x::Array; m::Real=0.8, l=0)
     T = length(x)
 
     if m < l
@@ -433,7 +433,7 @@ end
 
 
 """
-    exact_whittle_est(x::Array; m=0.5, l=0)
+    exact_whittle_est(x::Array; m::Real=0.8), l=0)
 
 Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
@@ -448,14 +448,14 @@ Estimate the long memory parameter of a time series `x` using the exact Whittle 
 # Notes
 The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
 The condition `m < l` must hold.
-The default values of `m` and `l` are 0.5 and 0, respectively.
+The default values of `m` and `l` are 0.8 and 0, respectively.
 
 # Examples
 ```julia-repl
 julia> exact_whittle_est(randn(100,1))
 ```
 """
-function exact_whittle_est(x::Array; m=0.5, l=0)
+function exact_whittle_est(x::Array; m::Real=0.8, l=0)
     x = x .- smean(x)
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
@@ -465,7 +465,7 @@ end
 
 
 """
-    exact_whittle_est_variance(x::Array; m=0.5)
+    exact_whittle_est_variance(x::Array; m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. 
 
@@ -473,7 +473,7 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 - `x::Vector`: time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 
 # Output
 - `varb::Float64`: variance of the estimator
@@ -487,12 +487,12 @@ The variance is the same as the one from using the Whittle log-likelihood functi
 julia> exact_whittle_est_variance(fi(100,0.4))
 ```
 """
-function exact_whittle_est_variance(x::Array; m=0.5)
+function exact_whittle_est_variance(x::Array; m::Real=0.8)
     return whittle_est_variance(x; m=m)
 end
 
 """ 
-    exact_whittle_est_variance(T::Int;m=0.5
+    exact_whittle_est_variance(T::Int; m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the exaxct Whittle log-likelihood function.
 
@@ -503,7 +503,7 @@ Estimate the variance of the estimator for the long memory parameter of a time s
 - `m∈(0,1)::Float64`: taper final
 
 # Output
-- `varb::Float64`: variance of the estimator
+- `varb::Float64`: variance of the estimator. Default is 0.8
 
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
@@ -514,7 +514,7 @@ The variance is the same as the one from using the Whittle log-likelihood functi
 julia> exact_whittle_est_variance(100,0.4)
 ```
 """
-function exact_whittle_est_variance(T::Int; m=0.5)
+function exact_whittle_est_variance(T::Int; m::Real=0.8)
     return whittle_est_variance(T; m=m)
 end
 
