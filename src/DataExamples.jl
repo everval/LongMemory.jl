@@ -131,7 +131,7 @@ function NHTempDataPlot()
 end
 
 """
-    LMPlot(x::Array;lags::Int=50)
+    LMPlot(x::Array;lags::Int=50,name::String="Time series")
 
 Returns a plot of the time series `x`.
 
@@ -140,6 +140,7 @@ Returns a plot of the time series `x`.
 
 # Optional arguments
 - `lags::Int`: The number of lags to use in the autocorrelation function.
+- `name::String`: The name of the time series to use in the plot.
 
 # Output
 - `pp::Plot`: The plot of the time series `x`.
