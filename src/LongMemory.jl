@@ -20,7 +20,7 @@ export NileData, NHTempData, NileDataPlot, NHTempDataPlot, LMPlot
 
 include("LogPeriodEstimators.jl")
 using .LogPeriodEstimators
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot, periodogram
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators

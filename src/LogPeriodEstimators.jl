@@ -13,9 +13,12 @@ module LogPeriodEstimators
 include("GeneratingFunctions.jl")
 import .GeneratingFunctions: fracdiff
 
+include("ClassicEstimators.jl")
+import .ClassicEstimators: smean, sstd
+
 using FFTW, Optim, Plots
 
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot, periodogram
 
 
 """
@@ -83,7 +86,7 @@ function periodogram(x::Array)
     T = length(x)
 
     I_w = abs.(rfft(x)) .^ 2 ./ T
-    w = 2 * π * (0:T-1) ./ T
+    w = collect(2 * π * (0:T-1) ./ T)
 
     ind = iseven(T) ? round(Int, T / 2 + 1) : ceil(Int, T / 2)
     I_w, w = I_w[1:ind], w[1:ind]
@@ -277,8 +280,8 @@ function whittle_llk(d, x::Array; m=0.5, l=0)
     I_w = I_w0[first:last]
     w = w0[first:last]
 
-    G = sum(I_w .* (w .^ (2 * d))) / length(w)
-    Q = log(G) - 2 * d * sum(log.(w)) / length(w)
+    G = smean(I_w .* (w .^ (2 * d))) 
+    Q = log(G) - 2 * d * smean(log.(w)) 
 
     return Q
 end
@@ -405,7 +408,6 @@ julia> exact_whittle_llk(0.4,randn(100,1))
 ```
 """
 function exact_whittle_llk(d, x::Array; m=0.5, l=0)
-    d = -1  + 2 * exp(d) / (1 + exp(d))
     T = length(x)
 
     if m < l
@@ -422,8 +424,8 @@ function exact_whittle_llk(d, x::Array; m=0.5, l=0)
     I_w = I_w0[first:last]
     w = w0[first:last]
 
-    G = sum(I_w) / length(w)
-    Q = log(G) - 2 * d * sum(log.(w)) / length(w)
+    G = smean(I_w) 
+    Q = log(G) - 2 * d * smean(log.(w)) 
 
     return Q
 end
@@ -454,12 +456,9 @@ julia> exact_whittle_est(randn(100,1))
 """
 function exact_whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
-    dini = (d0 + 1) / (1 - d0)
-    dwhi = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [dini]).minimizer[1]
+    whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
 
-    d = -1 + 2 * exp(dwhi) / (1 + exp(dwhi))
-
-    return d
+    return whittle.minimizer[1]
 end
 
 
