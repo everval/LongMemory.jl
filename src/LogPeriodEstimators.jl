@@ -405,6 +405,7 @@ julia> exact_whittle_llk(0.4,randn(100,1))
 ```
 """
 function exact_whittle_llk(d, x::Array; m=0.5, l=0)
+    d = -1  + 2 * exp(d) / (1 + exp(d))
     T = length(x)
 
     if m < l
@@ -453,9 +454,12 @@ julia> exact_whittle_est(randn(100,1))
 """
 function exact_whittle_est(x::Array; m=0.5, l=0)
     d0 = gph_est(x; m=m, l=l)
-    whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
+    dini = (d0 + 1) / (1 - d0)
+    dwhi = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [dini]).minimizer[1]
 
-    return whittle.minimizer[1]
+    d = -1 + 2 * exp(dwhi) / (1 + exp(dwhi))
+
+    return d
 end
 
 
