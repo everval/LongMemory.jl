@@ -143,8 +143,7 @@ Returns a plot of the time series `x`.
 - `name::String`: The name of the time series to use in the plot.
 
 # Output
-- `pp::Plot`: The plot of the time series `x`.
-- Four plots are returned in a 2x2 grid: 
+- `pp::Plot`: Four plots are returned in a 2x2 grid: 
     - The first plot is the time series of `x`. 
     - The second plot is the autocorrelation function of `x` using the `autocorrelation_plot` function. 
     - The third plot is the periodogram of `x` using the `periodogram_plot` function. 
