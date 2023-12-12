@@ -136,31 +136,30 @@ end
 
 
 """
-    fi_llk(x::Array,d::Real)
+    fi_llk(d::Real, x::Array)
 
 Computes the log-likelihood of the fractional differenced process with parameter `d` given the data `x`.
 
 # Arguments
-- `x::Array`: The data.
 - `d::Real`: The fractional differencing parameter.
+- `x::Array`: The data.
 
 # Output
 - `llk::Real`: The log-likelihood of the fractional differenced process with parameter `d` given the data `x`.
 
 # Notes
 This function computes the concentrated log-likelihood function of the fractional differenced process with parameter `d` given the data `x`.
-The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik (1999)](http://fmwww.bc.edu/ec-p/software/ox/Ox.arfima.v2.1.pdf).	
 
 # Examples    
 ```julia
-julia> fi_llk(randn(100,1), 0.4)
+julia> fi_llk(0.4, randn(100,1))
 ```
 """
 function fi_llk(d::Real, x::Array)
     d = -1 / 2 + exp(d) / (1 + exp(d))
     T = length(x)
     V = fi_var_matrix(T, d)
-    llk = 1/(2) * ( logdet(V) / T + log(x'/V*x) )
+    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
     return llk
 end
 
@@ -196,7 +195,7 @@ function fi_mle_est(x::Array)
     dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
     dmle = - 1 / 2 + exp(dmle) / (1 + exp(dmle))
     V = fi_var_matrix(length(x), dmle)
-    σ = sqrt( (x'/V*x) / length(x) )
+    σ = sqrt( (x'/V*x)[1,1] / length(x) )
 
     return dmle, σ
 end
@@ -329,7 +328,7 @@ function csa_llk(p::Real, q::Real, x::Array)
     q = 1 + 2 * (exp(q) / (1 + exp(q)))
     T = length(x)
     V = csa_var_matrix(T, p, q)
-    llk = 1/(2) * ( logdet(V) / T + log(x'/V*x) )
+    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
     return llk
 end
 
@@ -369,7 +368,7 @@ function csa_mle_est(x::Array)
     qmle = 1 + 2 * (exp(res[2]) / (1 + exp(res[2])))
 
     V = csa_var_matrix(length(x), pmle, qmle)
-    σ = sqrt( (x'/V*x) / length(x) )
+    σ = sqrt( ((x'/V*x)[1,1]) / length(x) )
 
     return pmle, qmle, σ
 end
