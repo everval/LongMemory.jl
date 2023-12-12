@@ -24,7 +24,7 @@ export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_va
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, my_toeplitz
 
 include("ClassicEstimators.jl")
 using .ClassicEstimators
