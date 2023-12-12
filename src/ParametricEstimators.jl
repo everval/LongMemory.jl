@@ -386,8 +386,8 @@ Estimates the parameters of the Heterogenous Autoregressive (HAR) model given th
 - `m::Array`: An array with the lags to use in the estimation. By default, the lags are 1, 5, and 22; as suggested by the original paper.
 
 # Output
-- `betas::Array`: The estimated parameters of the HAR model.
-- `sigma::Real`: The estimated variance of the HAR model.
+- `β::Array`: The estimated parameters of the HAR model.
+- `σ::Real`: The estimated standard deviation of the HAR model.
 
 # Examples    
 ```julia
@@ -419,12 +419,12 @@ function har_est(x::Array; m::Array=[1, 5, 22])
 
     Y = x[mm+1:T, 1]
 
-    betas = X \ Y
-    err = Y - X * betas
+    β = X \ Y
+    err = Y - X * β
 
-    sigma = (err' * err) / (T - mm - n - 1)
+    σ = sqrt( (err' * err) / (T - mm - n - 1) )
 
-    return betas, sigma
+    return β, σ
 
 end
 
