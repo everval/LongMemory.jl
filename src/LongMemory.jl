@@ -32,6 +32,6 @@ export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk
 
 include("Forecasters.jl")
 using .Forecasters
-export fi_ar_coefs, fi_forecast, csa_forecast, har_forecast
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, har_forecast
 
 end

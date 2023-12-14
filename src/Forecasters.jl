@@ -10,7 +10,12 @@ This module contains functions to forecast a long memory time series using the f
 """
 module Forecasters
 
-export fi_ar_coefs, fi_forecast, csa_forecast, har_forecast
+include("ClassicEstimators.jl")
+import .ClassicEstimators: smean
+
+using Plots
+
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, har_forecast
 
 
 """
@@ -31,7 +36,7 @@ Multiple dispatch is used to compute the forecast of a time series with or witho
 
 # Examples    
 ```julia
-julia> fi_forecast(figen(100,0.2), 10, 0.2)
+julia> fi_forecast(fi_gen(100,0.2), 10, 0.2)
 ```
 """
 function fi_forecast(x::Array, h::Int, d::Real)
@@ -72,7 +77,7 @@ Multiple dispatch is used to compute the forecast of a time series with or witho
 
 # Examples    
 ```julia
-julia> fi_forecast(figen(100,0.2), 10, 0.2)
+julia> fi_forecast(fi_gen(100,0.2), 10, 0.2)
 ```
 """
 function fi_forecast(x::Array, h::Int, d::Real, σ::Real)
@@ -89,6 +94,77 @@ function fi_forecast(x::Array, h::Int, d::Real, σ::Real)
 
     return xfor
 
+end
+
+"""
+    fi_forecast_plot(x::Array, h::Int, d::Real)
+
+Plots the forecast of a long memory time series using the fractional differencing method.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+- `d::Real`: The fractional differencing parameter.
+
+# Output
+- `p1::Plot`: The plot of the original time series and the forecast.
+
+# Notes
+Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
+Plotting is done by calling the `fi_forecast` function.
+
+# Examples    
+```julia
+julia> fi_forecast_plot(fi_gen(100,0.2), 10, 0.2)
+```
+"""
+function fi_forecast_plot(x::Array, h::Int, d::Real)
+    x = x.-smean(x)
+    T = length(x)
+
+    xfor = fi_forecast(x, h, d)
+
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
+    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+
+    return p1
+end
+
+"""
+    fi_forecast_plot(x::Array, h::Int, d::Real, σ::Real)
+
+Plots the forecast of a long memory time series using the fractional differencing method.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+- `d::Real`: The fractional differencing parameter.
+- `σ::Real`: The standard deviation of the forecast errors.
+
+# Output
+- `p1::Plot`: The plot of the original time series and the forecast.
+
+# Notes
+Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
+Plotting is done by calling the `fi_forecast` function.
+
+# Examples    
+```julia
+julia> fi_forecast_plot(fi_gen(100,0.2), 10, 0.2, 1.0)
+```
+"""
+function fi_forecast_plot(x::Array, h::Int, d::Real, σ::Real)
+    x = x.-smean(x)
+    T = length(x)
+
+    xfor = fi_forecast(x, h, d, σ)
+
+    p1 = plot(xfor[1:T,1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
+    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+    plot!(T+1:T+h,xfor[T+1:T+h, 2], fillrange = xfor[T+1:T+h, 3], label="Confidence band", fillalpha = 0.25, color = :black)
+    plot!(T+1:T+h,xfor[T+1:T+h, 3], label="", color=:black, line = :solid)
+
+    return p1
 end
 
 """
@@ -143,7 +219,7 @@ Multiple dispatch is used to compute the forecast of a time series with or witho
 
 # Examples    
 ```julia
-julia> csa_forecast(csafigen(100,1.4,1.4), 10, 1.4, 1.4)
+julia> csa_forecast(csa_gen(100,1.4,1.4), 10, 1.4, 1.4)
 ```
 """
 function csa_forecast(x::Array, h::Int, p::Real, q::Real)
@@ -190,7 +266,7 @@ Multiple dispatch is used to compute the forecast of a time series with or witho
 
 # Examples    
 ```julia
-julia> csa_forecast(csafigen(100,1.4,1.4), 10, 1.4, 1.4, 1.0)
+julia> csa_forecast(csa_gen(100,1.4,1.4), 10, 1.4, 1.4, 1.0)
 ```
 """
 function csa_forecast(x::Array, h::Int, p::Real, q::Real, σ::Real)
@@ -206,6 +282,79 @@ function csa_forecast(x::Array, h::Int, p::Real, q::Real, σ::Real)
 
     return xfor
 
+end
+
+"""
+    csa_forecast_plot(x::Array, h::Int, p::Real, q::Real)
+
+Plots the forecast of a long memory time series using the CSA method.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+- `p::Real`: The parameter p of the CSA process.
+- `q::Real`: The parameter q of the CSA process.
+
+# Output
+- `p1::Plot`: The plot of the original time series and the forecast.
+
+# Notes
+Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
+Plotting is done by calling the `csa_forecast` function.
+
+# Examples    
+```julia
+julia> csa_forecast_plot(csa_gen(100,1.4,1.4), 10, 1.4, 1.4)
+```
+"""
+function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real)
+    x = x.-smean(x)
+    T = length(x)
+
+    xfor = csa_forecast(x, h, p, q)
+
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
+    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+
+    return p1
+end
+
+"""
+    csa_forecast_plot(x::Array, h::Int, p::Real, q::Real, σ::Real)
+
+Plots the forecast of a long memory time series using the CSA method.
+
+# Arguments
+- `x::Array`: The time series.
+- `h::Int`: The number of periods to forecast.
+- `p::Real`: The parameter p of the CSA process.
+- `q::Real`: The parameter q of the CSA process.
+- `σ::Real`: The standard deviation of the forecast errors.
+
+# Output
+- `p1::Plot`: The plot of the original time series and the forecast.
+
+# Notes
+Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
+Plotting is done by calling the `csa_forecast` function.
+
+# Examples    
+```julia
+julia> csa_forecast_plot(csa_gen(100,1.4,1.4), 10, 1.4, 1.4, 1.0)
+```
+"""
+function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real, σ::Real)
+    x = x.-smean(x)
+    T = length(x)
+
+    xfor = csa_forecast(x, h, p, q, σ)
+
+    p1 = plot(xfor[1:T,1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
+    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+    plot!(T+1:T+h,xfor[T+1:T+h, 2], fillrange = xfor[T+1:T+h, 3], label="Confidence band", fillalpha = 0.25, color = :black)
+    plot!(T+1:T+h,xfor[T+1:T+h, 3], label="", color= :black, line = :solid)
+
+    return p1
 end
 
 
@@ -335,8 +484,6 @@ function har_forecast(x::Array, h::Int, m::Array=[1, 5, 22])
     return Y
 
 end
-
-
 
 """
     har_forecast(x::Array, h::Int, σ::Real, m::Array=[1,5,22])
