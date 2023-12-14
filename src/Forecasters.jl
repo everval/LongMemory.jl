@@ -15,7 +15,7 @@ import .ClassicEstimators: smean
 
 using Plots
 
-export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, har_forecast
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot
 
 
 """
@@ -119,13 +119,13 @@ julia> fi_forecast_plot(fi_gen(100,0.2), 10, 0.2)
 ```
 """
 function fi_forecast_plot(x::Array, h::Int, d::Real)
-    x = x.-smean(x)
+    x = x .- smean(x)
     T = length(x)
 
     xfor = fi_forecast(x, h, d)
 
-    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
-    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
     return p1
 end
@@ -141,8 +141,8 @@ Plots the forecast of a long memory time series using the fractional differencin
 - `d::Real`: The fractional differencing parameter.
 - `σ::Real`: The standard deviation of the forecast errors.
 
-# Output
-- `p1::Plot`: The plot of the original time series and the forecast.
+
+- `p1::Plot`: The plot of the original time series and the forecast with confidence bands.
 
 # Notes
 Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
@@ -154,15 +154,15 @@ julia> fi_forecast_plot(fi_gen(100,0.2), 10, 0.2, 1.0)
 ```
 """
 function fi_forecast_plot(x::Array, h::Int, d::Real, σ::Real)
-    x = x.-smean(x)
+    x = x .- smean(x)
     T = length(x)
 
     xfor = fi_forecast(x, h, d, σ)
 
-    p1 = plot(xfor[1:T,1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
-    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
-    plot!(T+1:T+h,xfor[T+1:T+h, 2], fillrange = xfor[T+1:T+h, 3], label="Confidence band", fillalpha = 0.25, color = :black)
-    plot!(T+1:T+h,xfor[T+1:T+h, 3], label="", color=:black, line = :solid)
+    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
+    plot!(T+1:T+h, xfor[T+1:T+h, 2], fillrange=xfor[T+1:T+h, 3], label="Confidence band", fillalpha=0.25, color=:black)
+    plot!(T+1:T+h, xfor[T+1:T+h, 3], label="", color=:black, line=:solid)
 
     return p1
 end
@@ -308,13 +308,13 @@ julia> csa_forecast_plot(csa_gen(100,1.4,1.4), 10, 1.4, 1.4)
 ```
 """
 function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real)
-    x = x.-smean(x)
+    x = x .- smean(x)
     T = length(x)
 
     xfor = csa_forecast(x, h, p, q)
 
-    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
-    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
     return p1
 end
@@ -332,7 +332,7 @@ Plots the forecast of a long memory time series using the CSA method.
 - `σ::Real`: The standard deviation of the forecast errors.
 
 # Output
-- `p1::Plot`: The plot of the original time series and the forecast.
+- `p1::Plot`: The plot of the original time series and the forecast with confidence bands.
 
 # Notes
 Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
@@ -344,15 +344,15 @@ julia> csa_forecast_plot(csa_gen(100,1.4,1.4), 10, 1.4, 1.4, 1.0)
 ```
 """
 function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real, σ::Real)
-    x = x.-smean(x)
+    x = x .- smean(x)
     T = length(x)
 
     xfor = csa_forecast(x, h, p, q, σ)
 
-    p1 = plot(xfor[1:T,1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line = :solid)
-    plot!(T+1:T+h,xfor[T+1:T+h, 1], label="Forecast", color=:red, line = :dash)
-    plot!(T+1:T+h,xfor[T+1:T+h, 2], fillrange = xfor[T+1:T+h, 3], label="Confidence band", fillalpha = 0.25, color = :black)
-    plot!(T+1:T+h,xfor[T+1:T+h, 3], label="", color= :black, line = :solid)
+    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
+    plot!(T+1:T+h, xfor[T+1:T+h, 2], fillrange=xfor[T+1:T+h, 3], label="Confidence band", fillalpha=0.25, color=:black)
+    plot!(T+1:T+h, xfor[T+1:T+h, 3], label="", color=:black, line=:solid)
 
     return p1
 end
@@ -425,7 +425,7 @@ end
 
 
 """
-    har_forecast(x::Array, h::Int, m::Array=[1,5,22])
+    har_forecast(x::Array, h::Int; flag::Bool = false, m::Array=[1,5,22])
 
 Computes the forecast of a time series by fitting and recursevely forecasting the HAR model.
 
@@ -434,9 +434,10 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 - `h::Int`: The number of periods to forecast.
 
 # Output
-- `xfor::Array`: The forecast of the time series as a column vector. The first T-max(m) elements are the original time series.
+- `xfor::Array`: The forecast of the time series. The first T-max(m) elements are the original time series.
 
 # Optional Arguments
+- `flag::Bool`: If true, the output is a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The default is false.	
 - `m::Array`: The lags to include in the HAR model. The default is [1,5,22].
 
 # Examples    
@@ -444,14 +445,14 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 julia> har_forecast(figen(100,0.2), 10)
 ```
 """
-function har_forecast(x::Array, h::Int, m::Array=[1, 5, 22])
+function har_forecast(x::Array, h::Int; flag::Bool=false, m::Array=[1, 5, 22])
     T = length(x)
 
     mm = maximum(m)
     n = length(m)
 
     ## Estimation because the matrix are needed for forecasting
-    X = zeros(T - mm + h, n + 1)
+    X = zeros(T - mm + h, n + 1 )
     X[:, 1] = ones(T - mm + h, 1)
 
     for ii = 1:n
@@ -460,17 +461,18 @@ function har_forecast(x::Array, h::Int, m::Array=[1, 5, 22])
         for jj = 1:cm
             aux = aux + x[mm-jj+1:T-jj, 1]
         end
-        X[1:T-mm, ii+1] = aux / cm
+        X[1:T-mm, ii+1 ] = aux / cm
     end
 
-    Y = zeros(T - mm + h, 1)
+    Y = zeros(T - mm + h, 3)
 
     Y[1:T-mm, 1] = x[mm+1:T, 1]
 
     betas = X[1:T-mm, :] \ Y[1:T-mm, 1]
+
     err = Y[1:T-mm, 1] - X[1:T-mm, :] * betas
 
-    sigma = (err' * err) / (T - mm - n - 1)
+    σ = sqrt((err' * err) / (T - mm - n - 1))
 
     ## Forecasting
     for ii = 1:h
@@ -481,44 +483,62 @@ function har_forecast(x::Array, h::Int, m::Array=[1, 5, 22])
         end
     end
 
-    return Y
+    xfor = zeros(T + h, 3)
+    xfor[1:T, 1] = x[1:T, 1]
+    xfor[T+1:T+h, 1] = Y[T-mm+1:T-mm+h, 1]
+    xfor[T+1:T+h, 2] = Y[T-mm+1:T-mm+h, 1] - 2 * σ * ones(h, 1)
+    xfor[T+1:T+h, 3] = Y[T-mm+1:T-mm+h, 1] + 2 * σ * ones(h, 1)
+
+    if flag == true
+        return xfor
+    elseif flag == false
+        return xfor[:, 1]
+    end
 
 end
 
-"""
-    har_forecast(x::Array, h::Int, σ::Real, m::Array=[1,5,22])
 
-Computes the forecast of a time series by fitting and recursevely forecasting the HAR model.
+"""
+    har_forecast_plot(x::Array, h::Int; flag::Bool = true, m::Array=[1,5,22])
+
+Plots the forecast of a time series by fitting and recursevely forecasting the HAR model.
 
 # Arguments
 - `x::Array`: The time series.
 - `h::Int`: The number of periods to forecast.
-- `σ::Real`: The standard deviation of the forecast errors.
 
 # Output
-- `xfor::Array`: The forecast of the time series as a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The first T-max(m) elements are the original time series.
+- `p1::Plot`: The plot of the original time series and the forecast.
 
 # Optional Arguments
+- `flag::Bool`: If true, the output is a matrix where the first column is the forecast, the second column is the lower confidence band, and the third column is the upper confidence band. The default is true.
 - `m::Array`: The lags to include in the HAR model. The default is [1,5,22].
+
+# Notes
+Multiple dispatch is used to plot the forecast of a time series with or without confidence bands.
+Plotting is done by calling the `har_forecast` function.
 
 # Examples    
 ```julia
-julia> har_forecast(figen(100,0.2), 10, 1)
+julia> har_forecast_plot(figen(100,0.2), 10)
 ```
 """
-function har_forecast(x::Array, h::Int, σ::Real, m::Array=[1, 5, 22])
+function har_forecast_plot(x::Array, h::Int; flag::Bool=true, m::Array=[1, 5, 22])
+    x = x .- smean(x)
     T = length(x)
 
-    mm = maximum(m)
+    xfor = har_forecast(x, h; flag=flag, m=m)
 
-    Y = zeros(T - mm + h, 3)
-    Y[:, 1] = har_forecast(x, h, m)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
-    Y[T-mm+1:T-mm+h, 2] = Y[T-mm+1:T-mm+h, 1] - 2 * σ * ones(h, 1)
-    Y[T-mm+1:T-mm+h, 3] = Y[T-mm+1:T-mm+h, 1] + 2 * σ * ones(h, 1)
+    if flag == true
+        plot!(T+1:T+h, xfor[T+1:T+h, 2], fillrange=xfor[T+1:T+h, 3], label="Confidence band", fillalpha=0.25, color=:black)
+        plot!(T+1:T+h, xfor[T+1:T+h, 3], label="", color=:black, line=:solid)
+    end
 
-    return Y
-
+    return p1
 end
+
 
 end # module Forecasters
