@@ -124,7 +124,7 @@ function fi_forecast_plot(x::Array, h::Int, d::Real)
 
     xfor = fi_forecast(x, h, d)
 
-    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", line=:solid)
     plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
     return p1
@@ -159,7 +159,7 @@ function fi_forecast_plot(x::Array, h::Int, d::Real, σ::Real)
 
     xfor = fi_forecast(x, h, d, σ)
 
-    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", line=:solid)
     plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
     plot!(T+1:T+h, xfor[T+1:T+h, 2], fillrange=xfor[T+1:T+h, 3], label="Confidence band", fillalpha=0.25, color=:black)
     plot!(T+1:T+h, xfor[T+1:T+h, 3], label="", color=:black, line=:solid)
@@ -313,7 +313,7 @@ function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real)
 
     xfor = csa_forecast(x, h, p, q)
 
-    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", line=:solid)
     plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
     return p1
@@ -349,7 +349,7 @@ function csa_forecast_plot(x::Array, h::Int, p::Real, q::Real, σ::Real)
 
     xfor = csa_forecast(x, h, p, q, σ)
 
-    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    p1 = plot(xfor[1:T, 1], xlabel="Time", ylabel="Time series", label="Original time series", line=:solid)
     plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
     plot!(T+1:T+h, xfor[T+1:T+h, 2], fillrange=xfor[T+1:T+h, 3], label="Confidence band", fillalpha=0.25, color=:black)
     plot!(T+1:T+h, xfor[T+1:T+h, 3], label="", color=:black, line=:solid)
@@ -529,7 +529,7 @@ function har_forecast_plot(x::Array, h::Int; flag::Bool=true, m::Array=[1, 5, 22
 
     xfor = har_forecast(x, h; flag=flag, m=m)
 
-    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", color=:blue, line=:solid)
+    p1 = plot(xfor[1:T], xlabel="Time", ylabel="Time series", label="Original time series", line=:solid)
     plot!(T+1:T+h, xfor[T+1:T+h, 1], label="Forecast", color=:red, line=:dash)
 
     if flag == true
