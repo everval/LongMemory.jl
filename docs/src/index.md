@@ -42,6 +42,10 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Data Available](@ref) contains the list of data sets available in the package.
 
+## Examples
+
+You can follow [this vignette](https://everval.github.io/files/files\LM_notebook.html) to learn how to use the package.
+
 ## Author
 
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
