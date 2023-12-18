@@ -2,7 +2,7 @@
 CurrentModule = LongMemory
 ```
 
-# Log-Periodogram-Based Estimators for Long Memory
+# Semiparametric Estimators for Long Memory
 
 Functions to estimate the long memory parameter based on the log-periodogram regression.  Estimators include the Geweke and Porter-Hudak estimators and the Whittle estimator.
 

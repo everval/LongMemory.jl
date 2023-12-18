@@ -12,7 +12,7 @@ module DataExamples
 using DataFrames, CSV, Artifacts, Plots
 
 include("ClassicEstimators.jl")
-import .ClassicEstimators: autocorrelation_plot, variance_plot
+import .ClassicEstimators: autocorrelation_plot, log_variance_plot
 
 include("LogPeriodEstimators.jl")
 import .LogPeriodEstimators: periodogram_plot
@@ -86,7 +86,7 @@ function NileDataPlot()
     p2 = autocorrelation_plot(data.NileMin,50)
     ylabel!(p2, "Autocorrelation")
     p3 = periodogram_plot(data.NileMin)
-    p4 = variance_plot(data.NileMin)[1]
+    p4 = log_variance_plot(data.NileMin;m=200)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 
@@ -123,7 +123,7 @@ function NHTempDataPlot()
     p2 = autocorrelation_plot(data.NHTemp,50)
     ylabel!(p2, "Autocorrelation") # This is how you add a
     p3 = periodogram_plot(data.NHTemp)
-    p4 = variance_plot(data.NHTemp)[1]
+    p4 = log_variance_plot(data.NHTemp;m=500)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 
@@ -131,7 +131,7 @@ function NHTempDataPlot()
 end
 
 """
-    LMPlot(x::Array;lags::Int=50)
+    LMPlot(x::Array;lags::Int=50,name::String="Time series")
 
 Returns a plot of the time series `x`.
 
@@ -140,10 +140,10 @@ Returns a plot of the time series `x`.
 
 # Optional arguments
 - `lags::Int`: The number of lags to use in the autocorrelation function.
+- `name::String`: The name of the time series to use in the plot.
 
 # Output
-- `pp::Plot`: The plot of the time series `x`.
-- Four plots are returned in a 2x2 grid: 
+- `pp::Plot`: Four plots are returned in a 2x2 grid: 
     - The first plot is the time series of `x`. 
     - The second plot is the autocorrelation function of `x` using the `autocorrelation_plot` function. 
     - The third plot is the periodogram of `x` using the `periodogram_plot` function. 
@@ -161,7 +161,7 @@ function LMPlot(x::Array;lags::Int=50,name::String="Time series")
     p2 = autocorrelation_plot(x,lags)
     ylabel!(p2, "Autocorrelation")
     p3 = periodogram_plot(x)
-    p4 = variance_plot(x)[1]
+    p4 = log_variance_plot(x;m=floor(Int,length(x)/2)-1)
 
     pp = plot(p1, p2, p3, p4, layout=l)
 
