@@ -15,7 +15,7 @@ makedocs(
         assets=String[],
     ),
     pages=[
-        "Home" => "about.md",
+        "Home" => "index.md",
         "Plotting" => "plotting.md",
         "Generating Functions" => "generating.md",
         "Log-Periodogram Estimation" => "logperiod.md",
@@ -23,7 +23,7 @@ makedocs(
         "Classic Estimation" => "classicest.md",
         "Forecasting" => "forecasting.md",
         "Data Available" => "data.md",
-        "Index" => "index.md",
+        "List of Functions" => "functionlist.md",
     ],
 )
 
