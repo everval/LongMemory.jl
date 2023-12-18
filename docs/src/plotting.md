@@ -8,9 +8,10 @@ Functions to plot the autocorrelation function, log-variance and log-periodogram
 
 ```@docs
 autocorrelation_plot
-variance_plot
+log_variance_plot
 periodogram_plot
-LMplot
+rescaled_range_plot
+LMPlot
 ```
 
 Documentation for [LongMemory.jl](https://github.com/everval/LongMemory.jl).
