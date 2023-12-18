@@ -44,7 +44,7 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 ## Examples
 
-You can follow [this vignette](https://everval.github.io/files/files\LM_notebook.html) to learn how to use the package.
+You can follow [this vignette](https://everval.github.io/files\LM_notebook.html) to learn how to use the package.
 
 ## Author
 
