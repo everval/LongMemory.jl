@@ -50,6 +50,18 @@ You can follow [this vignette](https://everval.github.io/files/files\LM_notebook
 
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
+## Citation
+
+If you use this package in your research, please cite it as:
+
+```bibtex
+@article{VeraValdes2024longmemory,
+  title={LongMemory.jl: Generating and Estimating Long Memory Models in Julia},
+  author={Vera-Vald{\'e}s, J Eduardo},
+  year={2024},
+}
+```
+
 ## Report a bug
 
 Please, report any bugs [here](mailto: eduardo@math.aau.dk).
