@@ -6,7 +6,6 @@ Functions to generate time series long memory models. Methods include fractional
 CurrentModule = LongMemory
 ```
 
-
 ```@autodocs
 Modules = [GeneratingFunctions]
 ```

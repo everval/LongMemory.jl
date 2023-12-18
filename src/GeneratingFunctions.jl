@@ -5,6 +5,7 @@ This module contains functions to generate time series with long memory.
 
 
 ## Author
+
 - [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """
@@ -12,7 +13,7 @@ module GeneratingFunctions
 
 using FFTW, Distributions
 
-export fracdiff, csadiff, csa_gen, edm_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
+export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
 
 
 """
@@ -156,7 +157,6 @@ julia> csa_gen(100,1.2,1.4)
 """
 function csa_gen(T::Int, p, q; μ=0, σ=1)
     x = csadiff(rand(Normal(μ, σ), T), p, q)
-
     return x
 end
 
@@ -429,6 +429,37 @@ function edm_gen(T::Int, d; t=0.5, μ=0, σ=1)
 
     return x
 
+end
+
+
+"""
+    sds_gen(T::Int,d; t=0.5, μ=0, σ=1)
+
+Generate a time series with long memory parameter `d` and length `T` using the stochastic duration shocks model.
+
+# Arguments
+- `T::Int`: length of the time series
+- `d::Float64`: long memory parameter
+
+# Optional arguments
+- `t::Float64`: taper length
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
+
+# Output
+- `x::Vector`: time series with long memory
+
+# Notes
+The taper length `t` is the proportion of the time series that is pre-sampled to avoid the initial bias of the model.
+Reference: Parke (1999)
+
+# Examples
+```julia-repl
+julia> sds_gen(100,0.4)
+```
+"""
+function sds_gen(T::Int, d; t=0.5, μ=0, σ=1)
+    return edm_gen(T, d; t=t, μ=μ, σ=σ)
 end
 
 

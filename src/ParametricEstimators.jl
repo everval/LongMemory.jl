@@ -4,6 +4,7 @@
 This module contains functions for estimating the parameters of the fractional differenced process à la ARFIMA and the CSA process.
 
 ## Author
+
 [J. Eduardo Vera-Valdés](https://everval.github.io/)
 
 """
@@ -12,9 +13,12 @@ module ParametricEstimators
 include("LogPeriodEstimators.jl")
 import .LogPeriodEstimators: gph_est
 
+include("ClassicEstimators.jl")
+import .ClassicEstimators: smean
+
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, my_toeplitz
 
 """
     my_toeplitz(coefs::Array)
@@ -132,32 +136,30 @@ end
 
 
 """
-    fi_llk(x::Array,d::Real)
+    fi_llk(d::Real, x::Array)
 
 Computes the log-likelihood of the fractional differenced process with parameter `d` given the data `x`.
 
 # Arguments
-- `x::Array`: The data.
 - `d::Real`: The fractional differencing parameter.
+- `x::Array`: The data.
 
 # Output
 - `llk::Real`: The log-likelihood of the fractional differenced process with parameter `d` given the data `x`.
 
 # Notes
 This function computes the concentrated log-likelihood function of the fractional differenced process with parameter `d` given the data `x`.
-The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik (1999)](http://fmwww.bc.edu/ec-p/software/ox/Ox.arfima.v2.1.pdf).	
 
 # Examples    
 ```julia
-julia> fi_llk(randn(100,1), 0.4)
+julia> fi_llk(0.4, randn(100,1))
 ```
 """
 function fi_llk(d::Real, x::Array)
     d = -1 / 2 + exp(d) / (1 + exp(d))
     T = length(x)
     V = fi_var_matrix(T, d)
-    llk = logdet(V) / T + log((x'/V*x)[1, 1] / T)
-    # σ2 = (x'/V*x)[1, 1] /T
+    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
     return llk
 end
 
@@ -165,18 +167,18 @@ end
 """
     fi_mle_est(x::Array)
 
-Computes the maximum likelihood estimate of the fractional differencing parameter and the variance of the fractional differenced process given the data `x`.
+Computes the maximum likelihood estimate of the fractional differencing parameter and the standard deviation of the fractional differenced process given the data `x`.
 
 # Arguments
 - `x::Array`: The data.
 
 # Output
 - `d::Real`: The maximum likelihood estimate of the fractional differencing parameter.
-- `σ2::Real`: The maximum likelihood estimate of the variance of the fractional differenced process.
+- `σ::Real`: The maximum likelihood estimate of the standard deviation of the fractional differenced process.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.
-The function is inspired by the `arfima.Estimate()` function in Ox; see [Doornik (1999)](http://fmwww.bc.edu/ec-p/software/ox/Ox.arfima.v2.1.pdf).	
+
 
 # Examples    
 ```julia
@@ -184,17 +186,18 @@ julia> fi_mle_est(randn(100,1))
 ```
 """
 function fi_mle_est(x::Array)
+    x = x .- smean(x)
     d0 = gph_est(x)
     d0 = min(0.49, d0)
     d0 = max(-0.49, d0)
     dini = log((d0 + 1 / 2) / (1 / 2 - d0))
 
     dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
-    dmle = -1 / 2 + exp(dmle) / (1 + exp(dmle))
+    dmle = - 1 / 2 + exp(dmle) / (1 + exp(dmle))
     V = fi_var_matrix(length(x), dmle)
-    σ2 = (x'/V*x)[1, 1] / length(x)
+    σ = sqrt( (x'/V*x)[1,1] / length(x) )
 
-    return dmle, σ2
+    return dmle, σ
 end
 
 
@@ -325,7 +328,7 @@ function csa_llk(p::Real, q::Real, x::Array)
     q = 1 + 2 * (exp(q) / (1 + exp(q)))
     T = length(x)
     V = csa_var_matrix(T, p, q)
-    llk = logdet(V) / T + log((x'/V*x)[1, 1] / T)
+    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
     return llk
 end
 
@@ -333,7 +336,7 @@ end
 """
     csa_mle_est(x::Array)
 
-Computes the maximum likelihood estimate of the parameters `p` and `q` of the CSA process and the variance of the CSA process given the data `x`.
+Computes the maximum likelihood estimate of the parameters `p` and `q` of the CSA process and the standard deviation of the CSA process given the data `x`.
 
 # Arguments
 - `x::Array`: The data.
@@ -341,7 +344,7 @@ Computes the maximum likelihood estimate of the parameters `p` and `q` of the CS
 # Output
 - `p::Real`: The maximum likelihood estimate of the first parameter of the CSA process.
 - `q::Real`: The maximum likelihood estimate of the second parameter of the CSA process.
-- `σ2::Real`: The maximum likelihood estimate of the variance of the CSA process.
+- `σ::Real`: The maximum likelihood estimate of the standard deviation of the CSA process.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.
@@ -352,6 +355,7 @@ julia> csa_mle_est(randn(100,1))
 ```
 """
 function csa_mle_est(x::Array)
+    x = x .- smean(x)
     pini = 1 + rand()
     qini = 1 + rand()
 
@@ -364,9 +368,9 @@ function csa_mle_est(x::Array)
     qmle = 1 + 2 * (exp(res[2]) / (1 + exp(res[2])))
 
     V = csa_var_matrix(length(x), pmle, qmle)
-    σ2 = (x'/V*x)[1, 1] / length(x)
+    σ = sqrt( ((x'/V*x)[1,1]) / length(x) )
 
-    return pmle, qmle, σ2
+    return pmle, qmle, σ
 end
 
 
@@ -382,8 +386,8 @@ Estimates the parameters of the Heterogenous Autoregressive (HAR) model given th
 - `m::Array`: An array with the lags to use in the estimation. By default, the lags are 1, 5, and 22; as suggested by the original paper.
 
 # Output
-- `betas::Array`: The estimated parameters of the HAR model.
-- `sigma::Real`: The estimated variance of the HAR model.
+- `β::Array`: The estimated parameters of the HAR model.
+- `σ::Real`: The estimated standard deviation of the HAR model.
 
 # Examples    
 ```julia
@@ -415,12 +419,12 @@ function har_est(x::Array; m::Array=[1, 5, 22])
 
     Y = x[mm+1:T, 1]
 
-    betas = X \ Y
-    err = Y - X * betas
+    β = X \ Y
+    err = Y - X * β
 
-    sigma = (err' * err) / (T - mm - n - 1)
+    σ = sqrt( (err' * err) / (T - mm - n - 1) )
 
-    return betas, sigma
+    return β, σ
 
 end
 

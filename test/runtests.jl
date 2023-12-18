@@ -18,5 +18,7 @@ using Test
     @test csa_var_vals(1, 1.4, 1.4) ≈ [2.1130846015858644]
     @test fi_cor_vals(1, 0.4) ≈ [1]
     @test csa_cor_vals(1, 1.4, 1.4) ≈ [1]
+    @test NileData()[1,1] == 622
+    @test NHTempData()[1,1] ≈ -0.901
 
 end
