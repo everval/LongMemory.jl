@@ -2,13 +2,9 @@
 CurrentModule = LongMemory
 ```
 
-# LongMemory
+# Index
 
-Documentation for [LongMemory](https://github.com/everval/LongMemory.jl).
+Documentation for [LongMemory.jl](https://github.com/everval/LongMemory.jl).
 
 ```@index
-```
-
-```@autodocs
-Modules = [LongMemory]
 ```
