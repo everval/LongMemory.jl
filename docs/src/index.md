@@ -56,7 +56,7 @@ If you use this package in your research, please cite it as:
 
 ```bibtex
 @article{VeraValdes2024longmemory,
-  title={LongMemory.jl: Generating and Estimating Long Memory Models in Julia},
+  title={LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia},
   author={Vera-Vald{\'e}s, J Eduardo},
   year={2024},
 }
