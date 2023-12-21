@@ -42,7 +42,7 @@ julia> using LongMemory
 
 ## Documentation
 
-The package documentation is available [here](https://everval.github.io/LongMemory.jl/stable/) or the link below.
+The package documentation is available [here](https://everval.github.io/LongMemory.jl/) or the link below.
 
 ## Citation
 
@@ -58,6 +58,6 @@ Vera-Valdés, J.E. (2024). "LongMemory.jl: Generating, Estimating, and Forecasti
 }
 ```
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://everval.github.io/LongMemory.jl/stable/)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://everval.github.io/LongMemory.jl/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://everval.github.io/LongMemory.jl/dev/)
 [![Build Status](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml?query=branch%3Amaster)
