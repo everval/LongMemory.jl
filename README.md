@@ -2,7 +2,7 @@
 
 ## About
 
-**LongMemory.jl** is a package for time series long memory modelling in ***[Julia](https://julialang.org/)***.
+**LongMemory.jl** is a package for time series long memory modelling in [***Julia***](https://julialang.org/).
 
 The package provides functions for *generating long memory*, *estimating the parameters of the models*, and *forecasting*.
 
@@ -40,13 +40,17 @@ Once installed, the package can be imported with the command:
 julia> using LongMemory
 ```
 
+## Documentation
+
+The package documentation is available [here](https://everval.github.io/LongMemory.jl/) or the link below.
+
 ## Examples
 
 An illustrative example of the package usage can be found [here.](https://everval.github.io/files/LM_notebook_illustration.html)
 
-## Documentation
+## Benchmarks
 
-The package documentation is available [here](https://everval.github.io/LongMemory.jl/) or the link below.
+The following [vignette](https://everval.github.io/files/LM_notebook_benchmark.html) contains benchmarks for some of the functions in the package against popular ***R*** packages: ***fracdiff*** and ***longMemoryTS***.
 
 ## Citation
 
