@@ -8,11 +8,11 @@ The package provides functions for *generating long memory*, *estimating the par
 
 Generating methods include *fractional differencing*, *stochastic error duration*, and *cross-sectional aggregation*.
 
-Estimators include classic ones used to estimate the Hurst effect, those inspired by the log-periodogram regression, and parametric ones.
+Estimators include *classic* ones used to estimate the Hurst effect, those inspired by the *log-periodogram regression*, and *parametric* ones.
 
 Forecasting is provided for all parametric estimators.
 
-Moreover, the package adds plotting capabilities to illustrate long memory dynamics and forecasting.
+Moreover, the package adds *plotting capabilities* to illustrate long memory dynamics and forecasting.
 
 Finally, the package includes the *Nile River minima* and *Northern Hemisphere Temperature Anomalies* data sets to illustrate the use of the functions.
 
@@ -39,6 +39,10 @@ Once installed, the package can be imported with the command:
 ```julia
 julia> using LongMemory
 ```
+
+## Examples
+
+An illustrative example of the package usage can be found [here.](https://everval.github.io/files/LM_notebook_illustration.html)
 
 ## Documentation
 
