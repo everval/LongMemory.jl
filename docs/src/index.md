@@ -8,7 +8,7 @@ Documentation for [LongMemory.jl](https://github.com/everval/LongMemory.jl).
 
 ## Description
 
-**LongMemory.jl** is a package for time series long memory modelling in [***Julia***](https://julialang.org/).
+**LongMemory.jl** is a package for time series long memory modelling in [*Julia*](https://julialang.org/).
 
 The package provides functions for *generating long memory*, *estimating the parameters of the models*, and *forecasting*.
 
@@ -60,7 +60,7 @@ You can follow [this vignette](https://everval.github.io/files/LM_notebook_illus
 
 ## Benchmarks
 
-The following [notebook](https://everval.github.io/files/LM_notebook_benchmark.html) contains benchmarks for some of the functions in the package against popular ***R*** packages: ***fracdiff*** and ***longMemoryTS***.
+The following [notebook](https://everval.github.io/files/LM_notebook_benchmark.html) contains benchmarks for some of the functions in the package against popular **R** packages: *fracdiff* and *longMemoryTS*.
 
 ## Author
 
