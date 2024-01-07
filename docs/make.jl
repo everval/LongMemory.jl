@@ -23,8 +23,8 @@ makedocs(
         "Classic Estimators" => "classicest.md",
         "Forecasting" => "forecasting.md",
         "Data Available" => "data.md",
-        "List of Functions" => "functionlist.md",
         "Illustrative Examples" => "examples.md",
+        "List of Functions" => "functionlist.md",
     ],
 )
 
