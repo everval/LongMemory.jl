@@ -56,13 +56,15 @@ The following [vignette](https://everval.github.io/files/LM_notebook_benchmark.h
 
 If you use this package in your research, please cite it as:
 
-Vera-Valdés, J.E. (2024). "LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia"
+Vera-Valdés, J.E. (2024). "LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia". arXiv 2401.14077. [https://arxiv.org/abs/2401.14077](https://arxiv.org/abs/2401.14077)
 
 ```bibtex
-@article{LongMemoryJL2024,
-  title={LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia},
-  author={Vera-Vald{\'e}s, J Eduardo},
-  year={2024},
+@article{VERAVALDES2024a,
+title = {LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia},
+year = {2024},
+author = {Vera-Valdés, J.E.},
+journal = {arXiv preprint arXiv:2401.14077},
+url = {https://arxiv.org/abs/2401.14077}
 }
 ```
 
