@@ -11,6 +11,7 @@ makedocs(
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://everval.github.io/LongMemory.jl",
+        repolink="https://everval.github.io/LongMemory.jl",
         edit_link="master",
         assets=String[],
     ),
@@ -22,6 +23,7 @@ makedocs(
         "Parametric Estimation" => "parametric.md",
         "Classic Estimators" => "classicest.md",
         "Forecasting" => "forecasting.md",
+        "Structural Changes" => "structchange.md",
         "Data Available" => "data.md",
         "Illustrative Examples" => "examples.md",
         "List of Functions" => "functionlist.md",

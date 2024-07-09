@@ -46,6 +46,10 @@ The package is registered in the Julia registry and can be installed at the REPL
 
 [Forecasting Long Memory Processes](@ref) contains the documentation for the functions to forecast long memory processes using the fractional differencing operator and the cross-sectional aggregation method. Forecasting using the HAR model is also available.
 
+## Structural Changes
+
+[Structural Change Tests for Long Memory Processes](@ref) contains the documentation for the functions to estimate structural changes in the long memory parameter of a time series.
+
 ## Data
 
 [Data Available](@ref) contains the list of data sets available in the package.
