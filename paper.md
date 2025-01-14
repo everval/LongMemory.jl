@@ -20,7 +20,7 @@ bibliography: paper.bib
 
 # Summary
 
-Long memory in time series analysis deals with the notion that data may have a strong dependence on past values. @Hurst1956 is one of the pioneering works on long memory. The author analyzed the flow of the Nile River and noted that water reservoirs that do not account for its long-term dynamics are at risk of overflowing. Long memory models are used in climate, finance, biology, economics, and many other fields. sSee @Beran2013 for a textbook on the subject.
+Long memory in time series analysis deals with the notion that data may have a strong dependence on past values. @Hurst1956 is one of the pioneering works on long memory. The author analyzed the flow of the Nile River and noted that water reservoirs that do not account for its long-term dynamics are at risk of overflowing. Long memory models are used in climate, finance, biology, economics, and many other fields. See @Beran2013 for a textbook on the subject.
 
 We say that a time series $x_t$ has long memory if:
 $$\gamma_x(k) \approx C_x k^{2d-1}\quad \textnormal{as}\quad k\to\infty, \label{def:cov}$$
@@ -48,5 +48,6 @@ The package has been used in the following research:
 
 - Vera-Valdés, J.E., and Kvist, O. (2024). “Effects of the Paris Agreement and the COVID-19 Pandemic on Volatility Persistence of Stocks Associated with the Climate Crisis: A Multiverse Analysis.” [@VERAVALDES2024c]
 
+Furthermore, see the accompanying vignettes for more examples of the package in use.
 
 # References
