@@ -1,5 +1,9 @@
 # LongMemory
 
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://everval.github.io/LongMemory.jl/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://everval.github.io/LongMemory.jl/dev/)
+[![Build Status](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+
 ## About
 
 **LongMemory.jl** is a package for time series long memory modelling in [***Julia***](https://julialang.org/).
@@ -68,6 +72,10 @@ url = {https://arxiv.org/abs/2401.14077}
 }
 ```
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://everval.github.io/LongMemory.jl/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://everval.github.io/LongMemory.jl/dev/)
-[![Build Status](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml?query=branch%3Amaster)
+## Contributing 
+
+All types of contributions are encouraged and appreciated.
+
+If you find a bug or have a feature request, please open a new [issue](https://github.com/everval/LongMemory.jl/issues). If you would like to contribute code, please open a [pull request](https://github.com/everval/LongMemory.jl/pulls). I welcome all contributions, including bug fixes, documentation improvements, and new features.
+
+Thank you for considering contributing!
