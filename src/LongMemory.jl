@@ -36,7 +36,7 @@ module LongMemory
 
 include("GeneratingFunctions.jl")
 using .GeneratingFunctions
-export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
+export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs, hwfilter, hwp_gen
 
 include("DataExamples.jl")
 using .DataExamples
@@ -56,7 +56,7 @@ export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk
 
 include("Forecasters.jl")
 using .Forecasters
-export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
 
 include("StructuralChanges.jl")
 using .StructuralChanges

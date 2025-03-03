@@ -20,5 +20,7 @@ using Test
     @test csa_cor_vals(1, 1.4, 1.4) ≈ [1]
     @test NileData()[1,1] == 622
     @test NHTempData()[1,1] ≈ -0.901
+    @test hitransform(hwfilter(ones(10))) ≈ ones(10)
+    @test gregory_coeffs(3) ≈ [1/2 1/12 1/24]'
 
 end

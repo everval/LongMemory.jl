@@ -13,9 +13,9 @@ module Forecasters
 include("ClassicEstimators.jl")
 import .ClassicEstimators: smean
 
-using Plots
+using Plots, FFTW
 
-export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
 
 
 """
@@ -540,5 +540,77 @@ function har_forecast_plot(x::Array, h::Int; flag::Bool=true, m::Array=[1, 5, 22
     return p1
 end
 
+"""
+    gregory_coeffs(N::Int)
+
+Computes the Gregory coefficients for the harmonic inverse transformation.
+
+# Arguments
+- `N::Int`: The number of coefficients to compute.
+
+# Output
+- `coefs::Array`: The Gregory coefficients.
+
+# Notes
+The first coefficient is 1/2 and the rest are computed using the recursive formula. The zero lag coefficient is not computed, it is theoretically 1.
+
+# Examples
+```julia
+julia> gregory_coeffs(5)
+```
+"""
+function gregory_coeffs(N::Int)
+    coefs = zeros(N)
+
+    coefs[1] = 1/2
+    for jj = 1:N
+        gs = 0
+        for ii = 1:(jj-1)
+            gs = gs + coefs[ii] / (jj - ii + 1)
+        end
+        coefs[jj] = 1/(jj + 1) - gs
+    end
+
+    return coefs
+end
+
+"""
+    hitransform(x::Array)
+
+Computes the harmonic inverse transformation of a time series. For more details see Hassler and Hosseinkouchack (2020).
+
+# Arguments
+- `x::Array`: The time series.
+
+# Output
+- `x::Array`: The time series after the harmonic inverse transformation.
+
+# Notes
+The harmonic inverse transformation is computed using the FFT.
+
+# Examples
+```julia
+julia> hitransform(fi_gen(100,0.2))
+```
+"""
+function hitransform(x::Array)
+
+    T = length(x)-1
+
+    np2 = nextpow(2, 2 * T - 1)
+
+    coefs = gregory_coeffs(T)
+
+    padcoefs = [coefs; zeros(np2 - T, 1)]
+    padx = [x[1:T]; zeros(np2 - T, 1)]
+
+    gxs = irfft(rfft(padx) .* rfft(padcoefs), np2)
+    gxs = gxs[1:T]
+
+    x[2:T+1] = x[2:T+1] .- gxs[1:T]
+
+    return x
+
+end
 
 end # module Forecasters

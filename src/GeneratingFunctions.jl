@@ -13,7 +13,7 @@ module GeneratingFunctions
 
 using FFTW, Distributions
 
-export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs
+export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs, hwfilter, hwp_gen
 
 
 """
@@ -493,6 +493,67 @@ function fi_survival_probs(N::Int, d)
 
     return p
 
+end
+
+
+"""
+    hwfilter(x::Array)
+
+Filter a time series `x` using the harmonically weighted filter.
+
+# Arguments
+- `x::Vector`: time series
+
+# Output
+- `hwx::Vector`: filtered time series
+
+# Notes
+The harmonically weighted filter is computed using the fast Fourier transform.
+
+# Examples
+```julia-repl
+julia> hwfilter(randn(100,1))
+```
+"""
+function hwfilter(x::Array)
+    T = length(x)
+    np2 = nextpow(2, 2 * T - 1)
+    
+    coefs = 1 ./ (1:T)
+
+    padcoefs = [coefs; zeros(np2 - T, 1)]
+    padx = [x; zeros(np2 - T, 1)]
+
+    hwx = irfft(rfft(padx) .* rfft(padcoefs), np2)
+    hwx = hwx[1:T]
+
+    return hwx
+
+end
+
+"""
+    hwp_gen(T;μ=0,σ=1)
+
+Generate a time series with long memory using the harmonically weighted process à la Hassler and Hosseinkouchack (2020).
+
+# Arguments
+- `T::Int`: length of the time series
+- `μ::Float64`: mean of the time series
+- `σ::Float64`: standard deviation of the time series
+
+# Output
+- `x::Vector`: time series with long memory
+
+# Examples
+```julia-repl
+julia> hwp_gen(100)
+```
+"""
+function hwp_gen(T; μ=0, σ=1)
+    ϵ = hwfilter(rand(Normal(0, σ), T))
+    x = μ .+ ϵ 
+
+    return x
 end
 
 end #module
