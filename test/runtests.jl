@@ -21,6 +21,9 @@ using Test
     @test NileData()[1,1] == 622
     @test NHTempData()[1,1] ≈ -0.901
     @test hitransform(hwfilter(ones(10))) ≈ ones(10)
-    @test gregory_coeffs(3) ≈ [1/2 1/12 1/24]'
-
+    @test gregory_coeffs(3) ≈ [1/2; 1/12; 1/24]
+    @test hitransform((zeros(10))) ≈ zeros(10)
+    @test hwfilter(zeros(10)) ≈ zeros(10)
+    @test hwfilter((ones(3))) ≈ [1; 1+1/2; 1+1/2+1/3]
+    @test hitransform(ones(3)) ≈ [1; 1-1/2; 1-1/2-1/12]
 end
