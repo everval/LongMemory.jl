@@ -433,7 +433,7 @@ end
 
 
 """
-    exact_whittle_est(x::Array; m::Real=0.8), l=0)
+    exact_whittle_est(x::Array; m::Real=0.8, l=0, detrend = true)
 
 Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
@@ -441,6 +441,7 @@ Estimate the long memory parameter of a time series `x` using the exact Whittle 
 - `x::Vector`: time series
 - `m∈(0,1)::Float64`: taper final
 - `l∈(0,1)::Float64`: taper initial
+- `detrend::Bool`: If true, the time series is demeaned before estimation.
 
 # Output
 - `d::Float64`: long memory parameter
@@ -455,8 +456,10 @@ The default values of `m` and `l` are 0.8 and 0, respectively.
 julia> exact_whittle_est(randn(100,1))
 ```
 """
-function exact_whittle_est(x::Array; m::Real=0.8, l=0)
-    x = x .- smean(x)
+function exact_whittle_est(x::Array; m::Real=0.8, l=0, detrend = true)
+    if detrend == true
+        x = x .- smean(x)
+    end
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d -> exact_whittle_llk(first(d), x; m=m, l=l), [d0])
 
