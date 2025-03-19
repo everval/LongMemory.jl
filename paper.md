@@ -22,7 +22,7 @@ bibliography: paper.bib
 
 Long memory in time series analysis deals with the notion that data may have a strong dependence on past values. @Hurst1956 is one of the pioneering works on long memory. The author analyzed the flow of the Nile River and noted that water reservoirs that do not account for its long-term dynamics are at risk of overflowing. Long memory models are used in climate, finance, biology, economics, and many other fields. See @Beran2013 for a textbook on the subject.
 
-We say that a time series $x_t$ has long memory if:
+We say that a stationary time series $x_t$ has long memory with parameter $d\in(-1/2,1/2)$ if:
 $$\gamma_x(k) \approx C_x k^{2d-1}\quad \textnormal{as}\quad k\to\infty, \label{def:cov}$$
 where $\gamma_x(k)$ is the autocovariance function and $C_x$ a constant, or if:
 $$f_x(\lambda)\approx C_f\lambda^{-2d}\quad \textnormal{as}\quad \lambda\to 0, \label{def:spectral}$$
