@@ -56,12 +56,11 @@ export smean, sstd, autocovariance, autocorrelation, autocorrelation_plot, sstdk
 
 include("Forecasters.jl")
 using .Forecasters
-export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_ma_coefs, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
 
 include("StructuralChanges.jl")
 using .StructuralChanges
 export lm_change_test
-
 
 
 end

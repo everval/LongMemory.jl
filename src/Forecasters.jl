@@ -15,7 +15,7 @@ import .ClassicEstimators: smean
 
 using Plots, FFTW
 
-export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
+export fi_ar_coefs, fi_forecast, fi_forecast_plot, csa_forecast, csa_forecast_plot, csa_ma_coefs, har_forecast, har_forecast_plot, gregory_coeffs, hitransform
 
 
 """
@@ -442,7 +442,7 @@ Computes the forecast of a time series by fitting and recursevely forecasting th
 
 # Examples    
 ```julia
-julia> har_forecast(figen(100,0.2), 10)
+julia> har_forecast(fi_gen(100,0.2), 10)
 ```
 """
 function har_forecast(x::Array, h::Int; flag::Bool=false, m::Array=[1, 5, 22])

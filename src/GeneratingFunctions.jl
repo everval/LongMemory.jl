@@ -549,9 +549,11 @@ Generate a time series with long memory using the harmonically weighted process 
 julia> hwp_gen(100)
 ```
 """
-function hwp_gen(T; μ=0, σ=1)
-    ϵ = hwfilter(rand(Normal(0, σ), T))
+function hwp_gen(T::Int; μ=0.0, σ=1.0)
+    ϵ = hwfilter(rand(Normal(0.0, σ), T))
     x = μ .+ ϵ 
+
+    rand(Normal(μ, σ), T)
 
     return x
 end
