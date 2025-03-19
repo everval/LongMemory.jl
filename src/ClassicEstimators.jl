@@ -73,7 +73,7 @@ julia> autocorrelation(randn(100), 10)
 """
 function autocorrelation(x::Array, k::Int=30; flag::Bool=false)
     acv = autocovariance(x, k)
-    if acv[1] == 0
+    if acv[1] ≈ 0.0000
         error("The variance of the time series is zero. The autocorrelation function is not defined.")
     end
     acf = acv ./ acv[1]
