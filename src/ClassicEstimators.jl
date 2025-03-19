@@ -73,6 +73,9 @@ julia> autocorrelation(randn(100), 10)
 """
 function autocorrelation(x::Array, k::Int=30; flag::Bool=false)
     acv = autocovariance(x, k)
+    if acv[1] == 0
+        error("The variance of the time series is zero. The autocorrelation function is not defined.")
+    end
     acf = acv ./ acv[1]
     if flag == true
         display(plot(acf, line=:stem, xlabel="Lags", ylabel="Autocorrelation function", legend=false, marker=:circle))
@@ -227,7 +230,7 @@ Computes the sample standard deviation of a time series using the m-th order sam
 
 # Examples    
 ```julia
-julia> sstdk(randn(100), m = 20)
+julia> sstdk(randn(100), 20)
 ```
 """
 function sstdk(x::Array, m::Int)

@@ -1,5 +1,17 @@
 using LongMemory
-using Test
+using Test, Plots
+
+
+@testset "ClassicEstimators" begin
+    @test smean(ones(10,1)) == 1
+    @test autocovariance(ones(10,1),1) ≈ [0.0]
+    @test autocorrelation(collect(1:10),1) ≈ [1.0]
+    @test length(autocorrelation_plot(ones(10),1)) == 1
+    @test length(log_variance_plot(randn(10,1); m = 4)) == 1
+    @test log_variance_est(collect(1:10); m = 4) ≈ 0.94596612
+    @test sstdk(randn(10), 2) ≈ 0.0
+
+end
 
 @testset "LongMemory.jl" begin
     @test fracdiff(ones(10,1),0) == ones(10,1)
