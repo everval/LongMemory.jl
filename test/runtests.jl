@@ -9,7 +9,7 @@ using Test, Plots
     @test length(autocorrelation_plot(ones(10),1)) == 1
     @test length(log_variance_plot(randn(10,1); m = 4)) == 1
     @test log_variance_est(collect(1:10); m = 4) ≈ 0.94596612
-    @test sstdk(randn(10), 2) ≈ 0.0
+    @test sstdk(ones(10), 2) ≈ 0.0
 
 end
 
