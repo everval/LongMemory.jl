@@ -106,11 +106,28 @@ end
     @test exact_whittle_est_variance(10) == whittle_est_variance(10)
 end
 
-@testset "LongMemory.jl" begin
+@testset "ParametricEstimators" begin
+    @test LongMemory.ParametricEstimators.my_toeplitz(collect(1:5))[1,:] == 1:5
     @test fi_var_vals(1,0.4) ≈ [2.070098325296286]
     @test fi_var_vals(1,0.2) ≈ [1.0986855396043997]
-    @test csa_var_vals(1, 1.4, 1.4) ≈ [2.1130846015858644]
+    @test length(fi_var_vals(10, 0.4)) == 10
+    @test size(fi_var_matrix(2, 0.1)) == (2,2)
+    @test fi_var_matrix(10, 0.1)[1,1] ≈ 1.019494788
     @test fi_cor_vals(1, 0.4) ≈ [1]
+    @test fi_llk(0.2, ones(10,1)) ≈ 1.0520643738861724
+    @test length(fi_mle_est(rand(10,1))) == 2
+    @test size(csa_var_matrix(5, 1.4, 1.4)) == (5,5)
+    @test csa_var_vals(5, 1.4, 1.4)[1] ≈ 2.1130846015858644
     @test csa_cor_vals(1, 1.4, 1.4) ≈ [1]
-        
+    @test csa_cor_vals(5, 1.4, 1.4)[1,1] ≈ 1
+    @test csa_llk(1.5,1.5,ones(10)) ≈ -0.08527518976186688
+    @test length(csa_mle_est(ones(10))) == 3
+    @test length(har_est(ones(50))) == 2
+end
+
+@testset "StructuralChanges" begin
+    @test lm_change_test(ones(100)) == 15
+    @test LongMemory.StructuralChanges.starred_var(ones(10))[1] ≈ 1.0
+    @test LongMemory.StructuralChanges.simple_ols(ones(10),zeros(10)) ≈ 0.0
+
 end
