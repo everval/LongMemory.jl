@@ -400,11 +400,7 @@ function har_est(x::Array; m::Array=[1, 5, 22])
     sort!(m)
 
     mm = maximum(m)
-
-    if mm != m[end]
-        error("The maximum lag must be the last value in the array.")
-    end
-
+    
     X = zeros(T - mm, n + 1)
     X[:, 1] = ones(T - mm, 1)
 
