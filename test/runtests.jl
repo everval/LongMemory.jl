@@ -87,12 +87,14 @@ end
     @test gph_est_variance(ones(10); m = 0.1, br = 2) ≈ π^2/24 * (3.52)
     @test gph_est_variance(ones(10); m = 0.1, br = 3) ≈ π^2/24 * (4.79)
     @test gph_est_variance(ones(10); m = 0.1, br = 4) ≈ π^2/24 * (6.06)
+    @test gph_est_variance(ones(10); m = 0.1, br = 5) ≈ π^2/24 * (6.06)
     @test gph_est_variance(ones(10); m = 0.1, br = -1) ≈ π^2/24 
     @test gph_est_variance(10; m = 0.1, br = 0) ≈ π^2/24
     @test gph_est_variance(10; m = 0.1, br = 1) ≈ π^2/24 * (9/4)
     @test gph_est_variance(10; m = 0.1, br = 2) ≈ π^2/24 * (3.52)
     @test gph_est_variance(10; m = 0.1, br = 3) ≈ π^2/24 * (4.79)
     @test gph_est_variance(10; m = 0.1, br = 4) ≈ π^2/24 * (6.06)
+    @test gph_est_variance(10; m = 0.1, br = 5) ≈ π^2/24 * (6.06)
     @test gph_est_variance(10; m = 0.1, br = -1) ≈ π^2/24 
     @test LongMemory.LogPeriodEstimators.whittle_llk(0.4,collect(1:10)) ≈ 1.8053316105447856
     @test_throws ErrorException LongMemory.LogPeriodEstimators.whittle_llk(0.4,ones(10); m = 0.1, l = 0.5)
