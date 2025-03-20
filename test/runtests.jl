@@ -1,7 +1,6 @@
 using LongMemory
 using Test
 
-
 @testset "ClassicEstimators" begin
     @test smean(ones(10,1)) == 1
     @test autocovariance(ones(10,1),1) ≈ [0.0]
@@ -129,5 +128,4 @@ end
     @test lm_change_test(ones(100)) == 15
     @test LongMemory.StructuralChanges.starred_var(ones(10))[1] ≈ 1.0
     @test LongMemory.StructuralChanges.simple_ols(ones(10),zeros(10)) ≈ 0.0
-
 end
