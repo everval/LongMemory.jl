@@ -18,6 +18,7 @@ using Test
     @test rescaled_range_est(collect(1:50)) ≈ -0.959937456
     @test_throws ErrorException rescaled_range_est(collect(1:10))
     @test length(rescaled_range_plot(collect(1:150))) == 1
+    @test length(rescaled_range_plot(collect(1:150); k=100, slope = true, slope2 = true)) == 1
     @test_throws ErrorException rescaled_range_plot(collect(1:10))
     @test rescaled_range(collect(1:30))[3] ≈ 33.0
     @test_throws ErrorException rescaled_range(collect(1:10))
@@ -49,7 +50,7 @@ end
     @test csa_forecast(zeros(10), 2, 1.5, 1.5, 1)[1:12,1] == zeros(12)
     @test length(csa_forecast_plot(zeros(10), 2, 1.5, 1.5)) == 1
     @test length(csa_forecast_plot(zeros(10), 2, 1.5, 1.5, 1)) == 1
-    @test LongMemory.Forecasters.csa_ma_coefs(1.5, 1.5, 2) ≈ [1.0; sqrt(1/2)]
+    @test csa_ma_coefs(1.5, 1.5, 2) ≈ [1.0; sqrt(1/2)]
     @test har_forecast(ones(100), 10)[101] ≈ 1.0
     @test length(har_forecast_plot(ones(100), 10)) == 1
     @test length(hwp_gen(10)) == 10
@@ -79,14 +80,37 @@ end
 
 end
 
+@testset "LogPeriodEstimators"  begin
+    @test length(periodogram_plot(ones(10); slope = true)) == 1
+    @test_throws ErrorException gph_est(ones(10); m = 0.1, l = 0.5)
+    @test gph_est_variance(ones(10); m = 0.1, br = 0) ≈ π^2/24
+    @test gph_est_variance(ones(10); m = 0.1, br = 1) ≈ π^2/24 * (9/4)
+    @test gph_est_variance(ones(10); m = 0.1, br = 2) ≈ π^2/24 * (3.52)
+    @test gph_est_variance(ones(10); m = 0.1, br = 3) ≈ π^2/24 * (4.79)
+    @test gph_est_variance(ones(10); m = 0.1, br = 4) ≈ π^2/24 * (6.06)
+    @test gph_est_variance(ones(10); m = 0.1, br = -1) ≈ π^2/24 
+    @test gph_est_variance(10; m = 0.1, br = 0) ≈ π^2/24
+    @test gph_est_variance(10; m = 0.1, br = 1) ≈ π^2/24 * (9/4)
+    @test gph_est_variance(10; m = 0.1, br = 2) ≈ π^2/24 * (3.52)
+    @test gph_est_variance(10; m = 0.1, br = 3) ≈ π^2/24 * (4.79)
+    @test gph_est_variance(10; m = 0.1, br = 4) ≈ π^2/24 * (6.06)
+    @test gph_est_variance(10; m = 0.1, br = -1) ≈ π^2/24 
+    @test LongMemory.LogPeriodEstimators.whittle_llk(0.4,collect(1:10)) ≈ 1.8053316105447856
+    @test_throws ErrorException LongMemory.LogPeriodEstimators.whittle_llk(0.4,ones(10); m = 0.1, l = 0.5)
+    @test whittle_est(collect(1:10)) ≈ 0.7496966402176871
+    @test whittle_est_variance(collect(1:10)) ≈ 0.041666666666666664
+    @test whittle_est_variance(10) ≈ 0.041666666666666664
+    @test_throws ErrorException LongMemory.LogPeriodEstimators.exact_whittle_llk(0.4,collect(1:10); m = 0.1, l = 0.5)
+    @test exact_whittle_est(collect(1:10)) ≈ 1.8101235290375945
+    @test exact_whittle_est_variance(collect(1:10)) == whittle_est_variance(collect(1:10))
+    @test exact_whittle_est_variance(10) == whittle_est_variance(10)
+end
+
 @testset "LongMemory.jl" begin
-
-
     @test fi_var_vals(1,0.4) ≈ [2.070098325296286]
     @test fi_var_vals(1,0.2) ≈ [1.0986855396043997]
     @test csa_var_vals(1, 1.4, 1.4) ≈ [2.1130846015858644]
     @test fi_cor_vals(1, 0.4) ≈ [1]
     @test csa_cor_vals(1, 1.4, 1.4) ≈ [1]
-    
-    
+        
 end
