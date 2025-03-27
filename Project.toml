@@ -1,7 +1,7 @@
 name = "LongMemory"
 uuid = "f5f8e4a8-cb56-40ea-a13e-090cc212d358"
 authors = ["J. Eduardo Vera-Valdés <eduardo@math.aau.dk>"]
-version = "0.1.3"
+version = "1.0.0"
 
 [deps]
 Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
