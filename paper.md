@@ -20,13 +20,13 @@ bibliography: paper.bib
 
 # Summary
 
-In time series analysis, the concept of *Long Memory* encompasses datasets includijng a strong dependency on past values. @Hurst1956 is one of the pioneering works on the subject from the field of Hydrology: while analyzing the flow of the Nile river, he noted that water reservoirs that do not account for its long-term dynamics were still at risk of overflowing. Long memory models are generally used in climate, finance, biology, economics, and many other fields. See @Beran2013 for a textbook on the subject.
+In time series analysis, the concept of *Long Memory* encompasses datasets including a strong dependency on past values. @Hurst1956 is one of the pioneering works on the subject from the field of Hydrology: while analyzing the flow of the Nile river, he noted that water reservoirs that do not account for its long-term dynamics were still at risk of overflowing. Long memory models are generally used in climate, finance, biology, economics, and many other fields. See @Beran2013 for a textbook on the subject.
 
-We say that a stationary time series $x_t$ has long memory with parameter $d = \pm 1/2$ if it has autocovariance function $\gamma_x(k)$ defined as:
+We say that a stationary time series $x_t$ has long memory with parameter $-1/2<d<1/2$ if it has autocovariance function $\gamma_x(k)$ defined as:
 $$\gamma_x(k) \sim C_x k^{2d-1}\quad \textnormal{as}\quad k\to\infty, \label{def:cov}$$
 or if it has spectral density function $f_x(\lambda)$ defined as:
 $$f_x(\lambda)\sim C_f\lambda^{-2d}\quad \textnormal{as}\quad \lambda\to 0, \label{def:spectral}$$
-where both $C_x$ and $C_f$ are constants. Above equavalences $g(x)\sim h(x)$ as $x\to x_0$ holds when $g(x)/h(x)$ converges to $1$ as $x$ tends to $x_0$.
+where both $C_x$ and $C_f$ are constants. Above equivalences $g(x)\sim h(x)$ as $x\to x_0$ holds when $g(x)/h(x)$ converges to $1$ as $x$ tends to $x_0$.
 
 Both properties above can be analyzed graphically by plotting the autocorrelation and periodogram (an estimator of the spectral density), respectively.
 As an example, the figure below shows the autocorrelation and periodogram (in logs) for the Nile River minima data. The data are available in `LongMemory.jl` through the `NileData()` function.
@@ -35,7 +35,8 @@ As an example, the figure below shows the autocorrelation and periodogram (in lo
 
 As the figure shows, the autocorrelation function decays slowly and the periodogram diverges towards infinity near the origin. These are standard features of long memory processes as we just defined them.
 The `LongMemory.jl` package is concerned with methods for modeling data with this type of behavior.
-The following code generates the figure. The `autocorrelation_plot` and `periodogram_plot` functions are part of the `LongMemory.jl` package.
+
+The following code generates the figure. The `autocorrelation_plot()` and `periodogram_plot()` functions are part of the `LongMemory.jl` package.
 
 ```julia
 using LongMemory, Plots
