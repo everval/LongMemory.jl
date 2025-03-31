@@ -87,8 +87,8 @@ The package has been used in the following research:
 
 - Vera-Valdés, J. Eduardo, and Olivia Kvist. 2024. “Breaching 1.5°C: Give Me the Odds.” arXiv, December. https://doi.org/10.48550/arXiv.2412.13855. [@vera-valdés2024]
 
-- Vera-Valdés, J.E., and Kvist, O. (2025). “Effects of the Paris Agreement and the COVID-19 Pandemic on Volatility Persistence of Stocks Associated with the Climate Crisis: A Multiverse Analysis.” Forthcoming in Advances in Econometrics. https://everval.github.io/publications/FinancialVolatilityAfterPA.html [@VERAVALDES2024c]
+- Vera-Valdés, J.E., and Kvist, O. (2025). “Effects of the Paris Agreement and the COVID-19 Pandemic on Volatility Persistence of Stocks Associated with the Climate Crisis: A Multiverse Analysis.” Forthcoming in Advances in Econometrics. https://everval.github.io/publications/FinancialVolatilityAfterPA.html [@VERAVALDES2025]
 
-Furthermore, see the accompanying examples of the package in use at the [package's website](https://everval.github.io/files/LM_notebook_illustration.html).
+Furthermore, see the accompanying examples of the package in use at the [author's website](https://everval.github.io/files/LM_notebook_illustration.html).
 
 # References
