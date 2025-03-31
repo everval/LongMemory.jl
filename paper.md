@@ -59,7 +59,7 @@ plot(p1, p2, p3, layout = l, size = (700, 500) )
 
 This section presents benchmarks contrasting different implementations to show the computational efficiency of `LongMemory.jl`. The package is related to the R [@R:lang] packages `LongMemoryTS` [@R:LongMemoryTS] and `fracdiff` [@R:fracdiff]. The former is the most similar to `LongMemory.jl` in terms of functionality, while the latter is the most popular package for long memory time series in R, measured by the number of CRAN downloads. 
 
-The following table presents the summary of the benchmarks. The code for the benchmarks is available on the [package's website](https://everval.github.io/files/LM_notebook_benchmark.html). The benchmarks were made using `BenchmarkTools.jl` [@BenchmarkToolsJL]. 
+The following table presents the summary of the benchmarks. The code for the benchmarks is available on the [author's website](https://everval.github.io/files/LM_notebook_benchmark.html). The benchmarks were made using `BenchmarkTools.jl` [@BenchmarkToolsJL]. 
 
 | Function          | Mean       | Median     | Language:Package     |
 |-------------------|------------|------------|----------------------|
