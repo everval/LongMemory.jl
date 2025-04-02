@@ -57,7 +57,7 @@ An illustrative example of the package usage can be found [here.](https://everva
 
 ## Benchmarks
 
-The following [vignette](https://everval.github.io/files/LM_notebook_benchmark.html) contains benchmarks for some of the functions in the package against popular ***R*** packages: ***fracdiff*** and ***longMemoryTS***.
+The following [notebook](https://everval.github.io/files/LM_notebook_benchmark.html) contains benchmarks for some of the functions in the package against popular ***R*** packages: ***fracdiff*** and ***longMemoryTS***.
 
 ## Citation
 
