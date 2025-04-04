@@ -5,6 +5,7 @@
 [![Build Status](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/everval/LongMemory.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![Coverage](https://codecov.io/gh/everval/LongMemory.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/everval/LongMemory.jl)
 [![DOI](https://zenodo.org/badge/697765094.svg)](https://doi.org/10.5281/zenodo.15096772)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07708/status.svg)](https://doi.org/10.21105/joss.07708)
 
 
 ## About
