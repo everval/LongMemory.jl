@@ -76,8 +76,9 @@ If you use this package in your research, please cite it as:
 
 Vera-Valdés, J. E., (2025). "LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia". Journal of Open Source Software, 10(108), 7708, [https://doi.org/10.21105/joss.07708](https://doi.org/10.21105/joss.07708)
 
+
 ```bibtex
-@article{Vera-Valdés2025, 
+@article{Vera-Valdes2025, 
 author = {J. Eduardo Vera-Valdés}, 
 title = {LongMemory.jl: Generating, Estimating, and Forecasting Long Memory Models in Julia}, 
 journal = {Journal of Open Source Software},
