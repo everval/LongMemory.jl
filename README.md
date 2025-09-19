@@ -37,7 +37,7 @@ pkg> add LongMemory
 Or, equivalently, via the `Pkg` API:
 
 ```julia
-julia> import Pkg; Pkg.add("LongMemory")
+julia> using Pkg; Pkg.add("LongMemory")
 ```
 
 ## Usage
