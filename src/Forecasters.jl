@@ -583,7 +583,7 @@ Computes the harmonic inverse transformation of a time series. For more details 
 - `x::Array`: The time series.
 
 # Output
-- `x::Array`: The time series after the harmonic inverse transformation.
+- `result::Array`: The time series after the harmonic inverse transformation (new array, input not mutated).
 
 # Notes
 The harmonic inverse transformation is computed using the FFT.
@@ -607,9 +607,10 @@ function hitransform(x::Array)
     gxs = irfft(rfft(padx) .* rfft(padcoefs), np2)
     gxs = gxs[1:T]
 
-    x[2:T+1] = x[2:T+1] .- gxs[1:T]
+    result = copy(x)
+    result[2:T+1] = result[2:T+1] .- gxs[1:T]
 
-    return x
+    return result
 
 end
 

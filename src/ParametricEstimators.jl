@@ -40,14 +40,9 @@ function my_toeplitz(coefs::Array)
     N = length(coefs)
     Toep = zeros(N, N)
 
-    for ii = 1:N
-        for jj = 1:N
-            if ii >= jj
-                Toep[ii, jj] = coefs[ii-jj+1]
-            else
-                Toep[ii, jj] = coefs[jj-ii+1]
-            end
-        end
+    @inbounds for ii in 1:N, jj in 1:ii
+        Toep[ii, jj] = coefs[ii-jj+1]
+        Toep[jj, ii] = coefs[ii-jj+1]
     end
 
     return Toep
@@ -81,7 +76,7 @@ function fi_var_vals(T::Int, d::Real)
         vars[k+1] = (d + k - 1) / (k - d) * vars[k]
     end
 
-    vars = vars .* (gamma(1 - 2 * d) / (gamma(1 - d))^2)
+    vars .*= (gamma(1 - 2 * d) / (gamma(1 - d))^2)
     return vars
 end
 
@@ -159,7 +154,8 @@ function fi_llk(d::Real, x::Array)
     d = -1 / 2 + exp(d) / (1 + exp(d))
     T = length(x)
     V = fi_var_matrix(T, d)
-    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
+    C = cholesky(Symmetric(V))
+    llk = 1/2 * (logdet(C) / T + log(dot(x, C \ x)))
     return llk
 end
 
@@ -195,7 +191,8 @@ function fi_mle_est(x::Array)
     dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
     dmle = - 1 / 2 + exp(dmle) / (1 + exp(dmle))
     V = fi_var_matrix(length(x), dmle)
-    σ = sqrt( (x'/V*x)[1,1] / length(x) )
+    C = cholesky(Symmetric(V))
+    σ = sqrt(dot(x, C \ x) / length(x))
 
     return dmle, σ
 end
@@ -328,7 +325,8 @@ function csa_llk(p::Real, q::Real, x::Array)
     q = 1 + 2 * (exp(q) / (1 + exp(q)))
     T = length(x)
     V = csa_var_matrix(T, p, q)
-    llk = 1/(2) * ( logdet(V) / T + log( (x'/V*x)[1,1] ) )
+    C = cholesky(Symmetric(V))
+    llk = 1/2 * (logdet(C) / T + log(dot(x, C \ x)))
     return llk
 end
 
@@ -368,7 +366,8 @@ function csa_mle_est(x::Array)
     qmle = 1 + 2 * (exp(res[2]) / (1 + exp(res[2])))
 
     V = csa_var_matrix(length(x), pmle, qmle)
-    σ = sqrt( ((x'/V*x)[1,1]) / length(x) )
+    C = cholesky(Symmetric(V))
+    σ = sqrt(dot(x, C \ x) / length(x))
 
     return pmle, qmle, σ
 end
@@ -406,9 +405,9 @@ function har_est(x::Array; m::Array=[1, 5, 22])
 
     for ii = 1:n
         cm = m[ii]
-        aux = zeros(T - mm, 1)
+        aux = zeros(T - mm)
         for jj = 1:cm
-            aux = aux + x[mm-jj+1:T-jj, 1]
+            aux .+= @view x[mm-jj+1:T-jj, 1]
         end
         X[:, ii+1] = aux / cm
     end

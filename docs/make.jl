@@ -3,6 +3,13 @@ using Documenter
 
 DocMeta.setdocmeta!(LongMemory, :DocTestSetup, :(using LongMemory); recursive=true)
 
+ Changelog.generate(
+    Changelog.Documenter(),                 # output type
+    joinpath(@__DIR__, "../CHANGELOG.md"),  # input file
+    joinpath(@__DIR__, "src/CHANGELOG.md"); # output file
+    repo = "everval/LongMemory.jl",        # default repository for links
+)
+
 makedocs(
     #modules=[LongMemory, LongMemory.GeneratingFunctions],
     authors="J. Eduardo Vera-Valdés",
