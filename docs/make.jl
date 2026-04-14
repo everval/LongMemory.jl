@@ -1,5 +1,6 @@
 using LongMemory
 using Documenter
+using Changelog
 
 DocMeta.setdocmeta!(LongMemory, :DocTestSetup, :(using LongMemory); recursive=true)
 
