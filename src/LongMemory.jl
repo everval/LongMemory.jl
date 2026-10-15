@@ -68,7 +68,7 @@ export NileData, NHTempData, NileDataPlot, NHTempDataPlot, LMPlot
 
 include("ParametricEstimators.jl")
 using .ParametricEstimators
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, durbin_levinson, fi_exact_gen, csa_exact_gen, arfima_whittle_est
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, durbin_levinson, fi_exact_gen, csa_exact_gen, arfima_whittle_est, arfima_var_vals, arfima_cor_vals, arfima_var_matrix, arfima_llk, arfima_mle_est, arfima_exact_gen
 
 include("Forecasters.jl")
 using .Forecasters

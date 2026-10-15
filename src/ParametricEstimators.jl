@@ -16,7 +16,7 @@ using ..GeneratingFunctions: davies_harte
 
 using Optim, LinearAlgebra, SpecialFunctions
 
-export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, durbin_levinson, fi_exact_gen, csa_exact_gen, arfima_whittle_est
+export fi_mle_est, csa_mle_est, har_est, fi_var_vals, csa_var_vals, fi_cor_vals, csa_cor_vals, fi_var_matrix, csa_var_matrix, fi_llk, csa_llk, durbin_levinson, fi_exact_gen, csa_exact_gen, arfima_whittle_est, arfima_var_vals, arfima_cor_vals, arfima_var_matrix, arfima_llk, arfima_mle_est, arfima_exact_gen
 
 """
     my_toeplitz(coefs::AbstractArray)
@@ -617,6 +617,24 @@ function pacf_to_coefs(r::AbstractArray)
 end
 
 """
+    coefs_to_pacf(φ::AbstractArray)
+
+Maps the coefficients `φ` of a stationary AR polynomial `1 - φ₁z - ... - φₚzᵖ` to its partial autocorrelations, the inverse of `pacf_to_coefs`. Internal function used by `arfima_mle_est`.
+"""
+function coefs_to_pacf(φ::AbstractArray)
+    p = length(φ)
+    r = zeros(p)
+    aux = float.(collect(φ))
+
+    for k = p:-1:1
+        r[k] = aux[k]
+        aux = [(aux[jj] + r[k] * aux[k-jj]) / (1 - r[k]^2) for jj = 1:k-1]
+    end
+
+    return r
+end
+
+"""
     arfima_spec(w::AbstractArray, d::Real, AR::AbstractArray, MA::AbstractArray)
 
 Computes the spectral density of the ARFIMA(p,d,q) model at the frequencies `w`, up to the factor `σ²/(2π)`. Internal function used by `arfima_whittle_est`.
@@ -637,6 +655,308 @@ function arfima_spec(w::AbstractArray, d::Real, AR::AbstractArray, MA::AbstractA
     g = abs2.(θz) ./ abs2.(φz) .* (2 .* sin.(w ./ 2)) .^ (-2 * d)
 
     return g
+end
+
+
+"""
+    arfima_var_vals(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray; σ=1)
+
+Computes the autocovariance function of the stationary ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `d::Real`: The fractional differencing parameter, `d∈(-1/2,1/2)`.
+- `AR::AbstractArray`: The AR coefficients `φ`, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`, which must be stationary.
+- `MA::AbstractArray`: The MA coefficients `θ`, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
+
+# Optional arguments
+- `σ::Real`: The standard deviation of the innovations.
+
+# Output
+- `acv::Array`: The autocovariance function of the ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Notes
+The model is `φ(L)(1-L)^d x_t = θ(L)ε_t`, the same parametrization used by `arfima_gen`, `arfima_whittle_est` and `arfima_forecast`.
+The autocovariances are computed in two steps. First, the autocovariances of the fractionally integrated MA process `u_t = θ(L)(1-L)^{-d}ε_t` are a finite combination of those of `fi_var_vals`. Second, the autocovariances of `x_t = φ(L)^{-1}u_t` are `γ_x(h) = Σ_k g(k) γ_u(h - k)`, where `g` are the autocovariances of the AR(p) process, which decay geometrically. The sum is truncated when the AR autocovariances are below `1e-15` relative to their variance, so the result is exact up to rounding error.
+This is equivalent to the hypergeometric representation of Sowell (1992), but it does not require the roots of the AR polynomial to be distinct.
+The computing time grows as the roots of the AR polynomial approach the unit circle.
+
+# References
+Sowell, F. (1992). Maximum likelihood estimation of stationary univariate fractionally integrated time series models. Journal of Econometrics, 53(1-3), 165-188.
+
+# Examples
+```julia
+julia> arfima_var_vals(10, 0.3, [0.5], [0.2])
+```
+"""
+function arfima_var_vals(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray; σ=1)
+    if abs(d) >= 1 / 2
+        error("The stationary process requires d∈(-1/2,1/2)")
+    end
+
+    p = length(AR)
+    q = length(MA)
+
+    # Truncation lag of the AR autocovariances
+    K = 0
+    if p > 0
+        C = zeros(p, p) # companion matrix
+        C[1, :] .= AR
+        for ii = 2:p
+            C[ii, ii-1] = 1
+        end
+        r = maximum(abs.(eigvals(C)))
+
+        if r >= 1
+            error("The AR polynomial must be stationary")
+        end
+
+        while r^K * (K + 1)^(p - 1) > 1e-15
+            K += 1
+        end
+    end
+
+    # Autocovariances of u_t = θ(L)(1-L)^{-d}ε_t
+    γfi = fi_var_vals(T + K + q, d)
+
+    θ = [1; MA]
+    ψ = zeros(q + 1) # autocovariances of the MA polynomial
+    for l = 0:q, s = 0:q-l
+        ψ[l+1] += θ[s+1] * θ[s+l+1]
+    end
+
+    γu = zeros(T + K)
+    @inbounds for h = 0:T+K-1
+        γu[h+1] = ψ[1] * γfi[h+1]
+        for l = 1:q
+            γu[h+1] += ψ[l+1] * (γfi[abs(h - l)+1] + γfi[h+l+1])
+        end
+    end
+
+    if p == 0
+        acv = γu[1:T]
+    else
+        # Autocovariances of x_t = φ(L)^{-1}u_t
+        g = ar_var_vals(K + 1, AR)
+
+        acv = zeros(T)
+        @inbounds for h = 0:T-1
+            acv[h+1] = g[1] * γu[h+1]
+            for k = 1:K
+                acv[h+1] += g[k+1] * (γu[abs(h - k)+1] + γu[h+k+1])
+            end
+        end
+    end
+
+    acv .*= σ^2
+
+    return acv
+end
+
+
+"""
+    ar_var_vals(T::Int, AR::AbstractArray)
+
+Computes the autocovariance function of the stationary AR(p) process with unit innovation variance at lags 0, 1, ..., `T-1`, solving the Yule-Walker equations. Internal function used by `arfima_var_vals`.
+"""
+function ar_var_vals(T::Int, AR::AbstractArray)
+    p = length(AR)
+
+    # Yule-Walker equations: g(k) - Σ_j φ_j g(|k-j|) = 1{k = 0}, k = 0, ..., p
+    A = zeros(p + 1, p + 1)
+    for k = 0:p
+        A[k+1, k+1] += 1
+        for jj = 1:p
+            A[k+1, abs(k - jj)+1] -= AR[jj]
+        end
+    end
+    b = zeros(p + 1)
+    b[1] = 1
+
+    g0 = A \ b
+
+    g = zeros(max(T, p + 1))
+    g[1:p+1] .= g0
+    for k = p+1:T-1
+        for jj = 1:p
+            g[k+1] += AR[jj] * g[k-jj+1]
+        end
+    end
+
+    return g[1:T]
+end
+
+
+"""
+    arfima_cor_vals(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray)
+
+Computes the autocorrelation function of the stationary ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `d::Real`: The fractional differencing parameter, `d∈(-1/2,1/2)`.
+- `AR::AbstractArray`: The AR coefficients, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`.
+- `MA::AbstractArray`: The MA coefficients, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
+
+# Output
+- `cors::Array`: The autocorrelation function of the ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Notes
+This function uses arfima_var_vals() to compute the autocovariance function and then normalizes by the variance (first computed value).
+
+# Examples
+```julia
+julia> arfima_cor_vals(10, 0.3, [0.5], [0.2])
+```
+"""
+function arfima_cor_vals(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray)
+    vars = arfima_var_vals(T, d, AR, MA)
+    cors = vars ./ vars[1]
+    return cors
+end
+
+
+"""
+    arfima_var_matrix(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray)
+
+Constructs the autocovariance matrix of the stationary ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Arguments
+- `T::Int`: The number of lags to compute.
+- `d::Real`: The fractional differencing parameter, `d∈(-1/2,1/2)`.
+- `AR::AbstractArray`: The AR coefficients, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`.
+- `MA::AbstractArray`: The MA coefficients, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
+
+# Output
+- `V::Array`: The autocovariance matrix of the ARFIMA(p,d,q) process at lags 0, 1, ..., `T-1`.
+
+# Examples
+```julia
+julia> arfima_var_matrix(10, 0.3, [0.5], [0.2])
+```
+"""
+function arfima_var_matrix(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray)
+    coefs = arfima_var_vals(T, d, AR, MA)
+    return my_toeplitz(coefs)
+end
+
+
+"""
+    arfima_llk(θ::AbstractArray, x::AbstractArray, p::Int, q::Int)
+
+Computes the log-likelihood of the ARFIMA(p,d,q) process given the data `x`.
+
+# Arguments
+- `θ::AbstractArray`: The `1 + p + q` parameters on the unconstrained scale: `d` on the logit scale, mapped to `-1/2 + exp(θ₁)/(1+exp(θ₁)) ∈ (-1/2, 1/2)`, followed by the partial autocorrelations of the AR and MA polynomials on the `atanh` scale (Monahan, 1984).
+- `x::AbstractArray`: The data (zero mean).
+- `p::Int`: The order of the autoregressive polynomial.
+- `q::Int`: The order of the moving average polynomial.
+
+# Output
+- `llk::Real`: The negative concentrated log-likelihood (up to constants, divided by `T`), suitable for minimization.
+
+# Notes
+This function computes the exact concentrated log-likelihood function of the ARFIMA(p,d,q) process, using the autocovariances of `arfima_var_vals` and the Durbin-Levinson algorithm, see `durbin_levinson`.
+The parametrization imposes stationarity and invertibility.
+
+# Examples
+```julia
+julia> arfima_llk([0.4, 0.2, -0.1], randn(100), 1, 1)
+```
+"""
+function arfima_llk(θ::AbstractArray, x::AbstractArray, p::Int, q::Int)
+    d, AR, MA = arfima_params(θ, p, q)
+    T = length(x)
+    xhat, v = durbin_levinson(arfima_var_vals(T, d, AR, MA), x) # prediction error decomposition
+    llk = 1/2 * (sum(log.(v)) / T + log(sum((vec(x) .- xhat) .^ 2 ./ v)))
+    return llk
+end
+
+
+"""
+    arfima_mle_est(x::AbstractArray, p::Int, q::Int)
+
+Computes the exact maximum likelihood estimates of the parameters of the ARFIMA(p,d,q) model given the data `x`.
+
+# Arguments
+- `x::AbstractArray`: The data.
+- `p::Int`: The order of the autoregressive polynomial.
+- `q::Int`: The order of the moving average polynomial.
+
+# Output
+- `d::Real`: The maximum likelihood estimate of the fractional differencing parameter.
+- `AR::Array`: The maximum likelihood estimates of the AR coefficients `φ`, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`.
+- `MA::Array`: The maximum likelihood estimates of the MA coefficients `θ`, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
+- `σ::Real`: The maximum likelihood estimate of the standard deviation of the innovations.
+
+# Notes
+The model is `φ(L)(1-L)^d x_t = θ(L)ε_t`, the same parametrization used by `arfima_gen` and `arfima_whittle_est`.
+The series is demeaned with the sample mean, and the Gaussian likelihood is evaluated exactly with the autocovariances of `arfima_var_vals` and the Durbin-Levinson algorithm (Sowell, 1992).
+Stationarity and invertibility are imposed by optimizing over `d∈(-1/2,1/2)` and over the partial autocorrelations of the AR and MA polynomials (Monahan, 1984). Hence, nonstationary data should be differenced before estimation.
+This function uses the `Optim` package to minimize the log-likelihood function, started at the Whittle estimates of `arfima_whittle_est`.
+With `p = q = 0` it estimates the same model as `fi_mle_est`.
+As usual for the exact maximum likelihood estimator with an estimated mean, `d` is biased downward in small samples, more so with AR terms that compete with `d` for the low-frequency dynamics (in simulations of an ARFIMA(1,0.3,0) with `φ₁ = 0.5`, the mean estimate of `d` is about 0.19 for `T = 500` and 0.27 for `T = 2000`). In such cases the likelihood can also have several local maxima. The Whittle estimator `arfima_whittle_est` does not depend on the mean and has a smaller bias.
+
+# References
+Sowell, F. (1992). Maximum likelihood estimation of stationary univariate fractionally integrated time series models. Journal of Econometrics, 53(1-3), 165-188.
+
+# Examples
+```julia
+julia> arfima_mle_est(arfima_gen(500, 0, [0.5], 0.3, []), 1, 0)
+```
+"""
+function arfima_mle_est(x::AbstractArray, p::Int, q::Int)
+    x = x .- smean(x)
+
+    d0, AR0, MA0, = arfima_whittle_est(x, p, q)
+    d0 = min(0.49, d0)
+    d0 = max(-0.49, d0)
+    r0 = clamp.([coefs_to_pacf(AR0); coefs_to_pacf(-MA0)], -0.99, 0.99)
+    θini = [log((d0 + 1 / 2) / (1 / 2 - d0)); atanh.(r0)]
+
+    res = optimize(θ -> arfima_llk(θ, x, p, q), θini).minimizer
+
+    d, AR, MA = arfima_params(res, p, q)
+
+    xhat, v = durbin_levinson(arfima_var_vals(length(x), d, AR, MA), x)
+    σ = sqrt(sum((vec(x) .- xhat) .^ 2 ./ v) / length(x))
+
+    return d, AR, MA, σ
+end
+
+
+"""
+    arfima_exact_gen(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray; μ=0, σ=1)
+
+Generate a stationary ARFIMA(p,d,q) process of length `T` with exactly the theoretical autocovariances, using the Davies-Harte method.
+
+# Arguments
+- `T::Int`: The length of the time series.
+- `d::Real`: The fractional differencing parameter, `d∈(-1/2,1/2)`.
+- `AR::AbstractArray`: The AR coefficients, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`, which must be stationary.
+- `MA::AbstractArray`: The MA coefficients, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
+
+# Optional arguments
+- `μ::Real`: The mean of the time series.
+- `σ::Real`: The standard deviation of the innovations.
+
+# Output
+- `x::Array`: The time series.
+
+# Notes
+In contrast to `arfima_gen`, which applies the fractional filter truncated at the start of the sample (a nonstationary, so-called type II, process), this function draws from the stationary process, with the autocovariances of `arfima_var_vals`.
+Note the order of the arguments, `(d, AR, MA)` as in `arfima_var_vals` and `arfima_forecast`, while `arfima_gen` takes `(μ, AR, d, MA)`.
+An error is thrown if the circulant embedding is not nonnegative definite. See `davies_harte` for details.
+
+# Examples
+```julia
+julia> arfima_exact_gen(100, 0.3, [0.5], [0.2])
+```
+"""
+function arfima_exact_gen(T::Int, d::Real, AR::AbstractArray, MA::AbstractArray; μ=0, σ=1)
+    x = μ .+ σ .* davies_harte(arfima_var_vals(T, d, AR, MA))
+
+    return x
 end
 
 

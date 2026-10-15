@@ -26,7 +26,7 @@ First release of `LongMemory.jl`. This package provides tools for generating, es
 #### Forecasters.jl
 - Fixed `hitransform` to not mutate input array; now returns a new array with results
 
-## [Version 2.0.0] - Unreleased
+## [Version 2.0.0] - 2026-10-15
 
 This is a breaking release. The main changes for users are that plotting requires loading Plots.jl, that functions return vectors instead of `T×1` matrices, and that the data sets are returned as named tuples. See "Breaking changes" below.
 
@@ -43,6 +43,8 @@ This is a breaking release. The main changes for users are that plotting require
 
 #### Estimation and testing
 - `arfima_whittle_est`: parametric Whittle estimation of ARFIMA(p,d,q) models, imposing stationarity and invertibility.
+- `arfima_mle_est`, `arfima_llk`: exact maximum likelihood estimation of ARFIMA(p,d,q) models (Sowell, 1992), with the likelihood evaluated by the Durbin-Levinson algorithm.
+- `arfima_var_vals`, `arfima_cor_vals`, `arfima_var_matrix`: autocovariances, autocorrelations and autocovariance matrix of the stationary ARFIMA(p,d,q) process, exact up to rounding error, also for repeated or complex AR roots.
 - `feasible_exact_whittle_est`: the feasible exact local Whittle estimator of Shimotsu (2010) for series with unknown mean, valid also for `d > 1/2`.
 - `durbin_levinson`: one-step predictions and prediction error variances of a stationary series. `fi_llk`, `csa_llk`, `fi_mle_est` and `csa_mle_est` now use it, so the likelihood costs `O(T²)` instead of `O(T³)`, with the same values (e.g. `fi_mle_est` with `T = 2000` takes 0.06 s instead of 1.2 s).
 - `dfa_est`, `dfa_plot`, `dfa_fluctuation`: detrended fluctuation analysis.
@@ -53,7 +55,7 @@ This is a breaking release. The main changes for users are that plotting require
 
 #### Generation
 - `davies_harte`: exact simulation of a stationary Gaussian series with given autocovariances.
-- `fi_exact_gen`, `csa_exact_gen`: exact (stationary) simulation of the FI and CSA processes.
+- `fi_exact_gen`, `csa_exact_gen`, `arfima_exact_gen`: exact (stationary) simulation of the FI, CSA and ARFIMA processes.
 
 #### Forecasting
 - `arfima_forecast`, `arfima_forecast_plot`, `arfima_ar_coefs`, `arfima_ma_coefs`: forecasting with ARFIMA(p,d,q) models.

@@ -237,11 +237,50 @@ end
     @test_throws ErrorException fi_exact_gen(100, 0.5)
     @test length(csa_exact_gen(100, 1.5, 1.6)) == 100
     @test_throws ErrorException csa_exact_gen(100, 1.5, 1.0)
+    @test length(arfima_exact_gen(100, 0.3, [0.5], [0.2])) == 100
+    @test arfima_exact_gen(10, 0.3, [0.5], []; μ = 2, σ = 0) ≈ 2 .* ones(10)
+
+    # ARFIMA autocovariances: closed forms
+    @test arfima_var_vals(50, 0.3, [], []) ≈ fi_var_vals(50, 0.3)
+    @test arfima_var_vals(10, 0.0, [0.6], []) ≈ 0.6 .^ (0:9) ./ (1 - 0.6^2)
+    @test arfima_var_vals(5, 0.0, [], [0.4]) ≈ [1 + 0.4^2, 0.4, 0, 0, 0] atol = 1e-12
+    let φ = 0.6, θ = 0.3, g = arfima_var_vals(10, 0.0, [φ], [θ])
+        @test g[1] ≈ (1 + 2φ * θ + θ^2) / (1 - φ^2)
+        @test g[2] ≈ (1 + φ * θ) * (φ + θ) / (1 - φ^2)
+        @test g[3:10] ≈ φ .* g[2:9]
+    end
+    let θ = 0.4, γ = fi_var_vals(12, 0.3)
+        @test arfima_var_vals(10, 0.3, [], [θ]) ≈ (1 + θ^2) .* γ[1:10] .+ θ .* ([γ[2]; γ[1:9]] .+ γ[2:11])
+    end
+    # φ(B)φ(F)γ_x(h) = γ_u(h), with u the FIMA part, for distinct, repeated and complex AR roots
+    for AR in ([0.5, 0.3], [1.0, -0.25], [1.2, -0.5])
+        g = arfima_var_vals(60, 0.3, AR, [0.4])
+        u = arfima_var_vals(60, 0.3, [], [0.4])
+        a = [1; -AR]
+        lhs = [sum(a[i+1] * a[j+1] * g[abs(h + i - j)+1] for i = 0:2, j = 0:2) for h = 2:50]
+        @test lhs ≈ u[3:51]
+    end
+    @test arfima_var_vals(10, 0.3, [0.5], [0.2]; σ = 2) ≈ 4 .* arfima_var_vals(10, 0.3, [0.5], [0.2])
+    @test arfima_cor_vals(10, 0.3, [0.5], [0.2])[1] == 1
+    @test size(arfima_var_matrix(10, 0.3, [0.5], [0.2])) == (10, 10)
+    @test_throws ErrorException arfima_var_vals(10, 0.5, [], [])
+    @test_throws ErrorException arfima_var_vals(10, 0.3, [1.0], [])
 
     # ARFIMA internals: partial autocorrelations map to stationary AR polynomials
     @test LongMemory.ParametricEstimators.pacf_to_coefs([0.5]) ≈ [0.5]
     @test LongMemory.ParametricEstimators.pacf_to_coefs([0.5, 0.2]) ≈ [0.5 - 0.2 * 0.5, 0.2]
     @test LongMemory.ParametricEstimators.arfima_spec([π/2], 0.0, [], []) ≈ [1.0]
+    let r = [0.5, -0.3, 0.8]
+        @test LongMemory.ParametricEstimators.coefs_to_pacf(LongMemory.ParametricEstimators.pacf_to_coefs(r)) ≈ r
+    end
+
+    # ARFIMA likelihood: with p = q = 0 it is the FI likelihood
+    let x = sin.(1:200) .+ cos.(sqrt.(1:200))
+        @test arfima_llk([0.3], x, 0, 0) ≈ fi_llk(0.3, x)
+        d, AR, MA, σ = arfima_mle_est(x, 1, 1)
+        @test length(AR) == 1 && length(MA) == 1
+        @test (d, AR, MA, σ) == arfima_mle_est(x, 1, 1)
+    end
 end
 
 @testset "StructuralChanges" begin
@@ -266,6 +305,8 @@ end
     @test fracdiff(xm, 0) isa AbstractVector
     @test fracdiff(xm, 1) isa AbstractVector
     @test fracdiff(xm, 0.3) isa AbstractVector
+    @test arfima_var_vals(10, 0.3, [0.5], []) isa AbstractVector
+    @test arfima_exact_gen(10, 0.3, [0.5], []) isa AbstractVector
     @test csadiff(xm, 1.5, 1.5) isa AbstractVector
     @test hwfilter(xm) isa AbstractVector
     @test csa_gen(10, 5, 1.5, 1.5) isa AbstractVector
@@ -313,6 +354,14 @@ end
     @test abs(d - 0.2) < 0.15
     @test abs(AR[1] - 0.5) < 0.15
     @test isempty(MA)
+    @test abs(σ - 2.0) < 0.15
+
+    # ARFIMA(0,d,1) exact MLE
+    z = arfima_exact_gen(2000, 0.3, [], [0.4]; μ = 1.0, σ = 2.0)
+    d, AR, MA, σ = arfima_mle_est(z, 0, 1)
+    @test abs(d - 0.3) < 0.15
+    @test isempty(AR)
+    @test abs(MA[1] - 0.4) < 0.15
     @test abs(σ - 2.0) < 0.15
 
     # Davies-Harte: sample autocovariances of the exact simulation
