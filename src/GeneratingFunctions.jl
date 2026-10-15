@@ -13,7 +13,7 @@ module GeneratingFunctions
 
 using FFTW, Distributions
 
-export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi, fi_gen, arfi_gen, arfima_gen, fi_survival_probs, hwfilter, hwp_gen
+export fracdiff, csadiff, csa_gen, edm_gen, sds_gen, fi_gen, arfi_gen, arfima_gen, fi_survival_probs, hwfilter, hwp_gen, davies_harte
 
 
 """
@@ -38,7 +38,7 @@ We use autoregressive formulas to efficiently compute the coefficients of the fr
 julia> fracdiff(randn(100,1),0.4)
 ```
 """
-function fracdiff(x::Array, d::Float64)
+function fracdiff(x::AbstractArray, d::Real)
     T = length(x)
 
     np2 = nextpow(2, 2 * T - 1)
@@ -63,7 +63,8 @@ end
     fracdiff(x,d::Int)
 
 Compute the first or null difference of a time series `x`.
-Multiple dispatch is used to return the same input or call the function `diff` from the Julia standard library if `d=1` or `d=0`, respectively.
+Multiple dispatch is used to return the same input or call the function `diff` from the Julia standard library if `d=0` or `d=1`, respectively.
+Any other integer `d` (e.g. `d=-1`, integration) falls back to the truncated filter used for fractional `d`.
 
 # Arguments
 - `x::Vector`: time series
@@ -77,16 +78,14 @@ Multiple dispatch is used to return the same input or call the function `diff` f
 julia> fracdiff(randn(100,1),1)
 ```
 """
-function fracdiff(x::Array, d::Int)
-    T = length(x)
-
+function fracdiff(x::AbstractArray, d::Int)
     if d == 0
-        dx = x
+        return vec(x)
     elseif d == 1
-        dx = diff(x, dims=1)
+        return diff(vec(x))
     end
 
-    return dx
+    return fracdiff(x, float(d))
 end
 
 
@@ -112,7 +111,7 @@ We use autoregressive formulas to efficiently compute the coefficients of the mo
 julia> csadiff(randn(100,1),1.2,1.4)
 ```
 """
-function csadiff(x::Array, p, q)
+function csadiff(x::AbstractArray, p, q)
     T = length(x)
 
     np2 = nextpow(2, 2 * T - 1)
@@ -156,7 +155,7 @@ julia> csa_gen(100,1.2,1.4)
 ```
 """
 function csa_gen(T::Int, p, q; μ=0, σ=1)
-    x = csadiff(rand(Normal(μ, σ), T), p, q)
+    x = μ .+ csadiff(rand(Normal(0, σ), T), p, q)
     return x
 end
 
@@ -196,7 +195,7 @@ function csa_gen(T::Int, N::Int, p, q; t=0.01, μ=0, σ=1)
 
     X = zeros(T + t, N)
 
-    errors = rand(Normal(μ, σ), T + t, N)
+    errors = rand(Normal(0, σ), T + t, N)
 
     for i = 1:N
         for j = 2:T+t
@@ -204,42 +203,10 @@ function csa_gen(T::Int, N::Int, p, q; t=0.01, μ=0, σ=1)
         end
     end
 
-    x = sum(X[t+1:T+t, :], dims=2)
+    x = μ .+ vec(sum(X[t+1:T+t, :], dims=2))
 
     return x
 
-end
-
-
-"""
-    fi(T,d;μ=0,σ=1)
-
-Generate a time series with long memory parameter `d` and length `T` using the fractional difference filter.
-
-# Arguments
-- `T::Int`: length of the time series
-- `d::Float64`: fractional difference parameter
-
-# Optional arguments
-- `μ::Float64`: mean of the time series
-- `σ::Float64`: standard deviation of the time series
-
-# Output
-- `x::Vector`: time series with long memory
-
-# Notes     
-Multiple dispatch is used for generation: If `d` is an integer, the function returns a time series with first or null difference.
-See `fracdiff` for details.
-
-# Examples
-```julia-repl
-julia> fi(100,0.4)
-```
-"""
-function fi(T::Int, d; μ=0, σ=1)
-    x = fracdiff(rand(Normal(μ, σ), T), -d)
-
-    return x
 end
 
 
@@ -269,14 +236,14 @@ julia> fi_gen(100,0.4)
 ```
 """
 function fi_gen(T::Int, d; μ=0, σ=1)
-    x = fracdiff(rand(Normal(μ, σ), T), -d)
+    x = μ .+ fracdiff(rand(Normal(0, σ), T), -d)
 
     return x
 end
 
 
 """
-    arfima_gen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+    arfima_gen(T::Int, μ::Real, AR::AbstractArray, d::Real, MA::AbstractArray; σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,q) model.
 
@@ -298,48 +265,45 @@ The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodrígu
 
 # Examples
 ```julia-repl
-julia> arfima_gen(100, 0, [0.2; -0.5], 0.4, [-0.3; 0.1]])
+julia> arfima_gen(100, 0, [0.2; -0.5], 0.4, [-0.3; 0.1])
 ```
 """
-function arfima_gen(T::Int, μ::Real, AR::Array, d::Real, MA::Array; σ=1)
+function arfima_gen(T::Int, μ::Real, AR::AbstractArray, d::Real, MA::AbstractArray; σ=1)
     p = length(AR)
     q = length(MA)
 
     if q == 0
-        u = rand(Normal(0, σ), T + p, 1)
+        u = rand(Normal(0, σ), T + p)
     else
-        uM = zeros(T, q + 1)
-        u = rand(Normal(0, σ), T + p + q, 1)
+        e = rand(Normal(0, σ), T + q)
         MAb = [1; MA]
 
-        for ii in 1:q+1
-            for jj in 1:ii
-                uM[:, ii] .+= MAb[jj] * u[q+1-jj+1:T+q-jj+1]
-            end
+        u = zeros(T)
+        for jj in 1:q+1
+            u .+= MAb[jj] .* @view e[q+2-jj:T+q+1-jj]  # u_t = e_t + Σ_j θ_j e_{t-j}
         end
-        u = sum(uM, dims=2)
     end
 
     fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
 
     if p == 0
-        x = fiu
+        x = μ .+ fiu[1:T]
     else
         xb = zeros(T + p)
         for ii in p+1:T+p
             for jj in 1:p
                 xb[ii] += AR[jj] * xb[ii-jj]
             end
-            xb[ii] = μ + xb[ii] + fiu[ii-p]
+            xb[ii] = xb[ii] + fiu[ii-p]
         end
-        x = xb[p+1:T+p]
+        x = μ .+ xb[p+1:T+p]
     end
     return x
 end
 
 
 """
-    arfi_gen(T::Int, μ::Real, AR::Array, d::Real; σ=1)
+    arfi_gen(T::Int, μ::Real, AR::AbstractArray, d::Real; σ=1)
 
 Generate a time series with long memory parameter `d` and length `T` using the ARFIMA(p,d,0) model.
 
@@ -360,13 +324,13 @@ The code is inspired by the function `dgp_arfima.m` by [Carlos Vladimir Rodrígu
 
 # Examples
 ```julia-repl
-julia> arfi_gen(100, 0, [0.2; -0.5], 0.4])
+julia> arfi_gen(100, 0, [0.2; -0.5], 0.4)
 ```
 """
 function arfi_gen(T::Int, μ::Real, AR, d::Real; σ=1)
     p = length(AR)
 
-    u = rand(Normal(0, σ), T + p, 1)
+    u = rand(Normal(0, σ), T + p)
 
     fiu = fracdiff(u, -d)  #fracdiff with multiple dispatch
 
@@ -375,9 +339,9 @@ function arfi_gen(T::Int, μ::Real, AR, d::Real; σ=1)
         for jj in 1:p
             xb[ii] += AR[jj] * xb[ii-jj]
         end
-        xb[ii] = μ + xb[ii] + fiu[ii-p]
+        xb[ii] = xb[ii] + fiu[ii-p]
     end
-    x = xb[p+1:T+p]
+    x = μ .+ xb[p+1:T+p]
 
     return x
 end
@@ -414,20 +378,20 @@ function edm_gen(T::Int, d; t=0.5, μ=0, σ=1)
 
     p = fi_survival_probs(T + t, d) # Survival probabilities
 
-    u = rand(T + t, 1)
+    u = rand(T + t)
 
-    tiempos = searchsortedlast.(Ref(p[:, 1]), u, rev=true) # Random times
+    tiempos = searchsortedlast.(Ref(p), u, rev=true) # Random times
 
-    x = zeros(T + t, 1) # Pre-allocate
-    err = rand(Normal(μ, σ), T + t) # Error term
+    x = zeros(T + t) # Pre-allocate
+    err = rand(Normal(0, σ), T + t) # Error term
 
     for ii = 1:(T+t)
-        uxu = zeros(T + t, 1) # Pre-allocate
-        uxu[ii:min((ii + tiempos[ii] - 1), T + t), 1] .= err[ii] # Error term surviving
+        uxu = zeros(T + t) # Pre-allocate
+        uxu[ii:min((ii + tiempos[ii] - 1), T + t)] .= err[ii] # Error term surviving
         x = x + uxu
     end
 
-    return x
+    return μ .+ x[t+1:T+t] # Discard pre-sample
 
 end
 
@@ -463,7 +427,7 @@ function sds_gen(T::Int, d; t=0.5, μ=0, σ=1)
 end
 
 
-""""
+"""
     fi_survival_probs(N::Int,d)
 
 Generate the survival probabilities of the error duration model à la Parke (1999).
@@ -485,10 +449,10 @@ julia> fi_survival_probs(100,0.4)
 """
 function fi_survival_probs(N::Int, d)
 
-    p = zeros(N, 1)
-    p[1, 1] = 1
+    p = zeros(N)
+    p[1] = 1
     for ii = 1:N-1
-        p[ii+1, 1] = p[ii, 1] * (ii - 1 + d) / (ii + 1 - d)
+        p[ii+1] = p[ii] * (ii - 1 + d) / (ii + 1 - d)
     end
 
     return p
@@ -497,7 +461,7 @@ end
 
 
 """
-    hwfilter(x::Array)
+    hwfilter(x::AbstractArray)
 
 Filter a time series `x` using the harmonically weighted filter.
 
@@ -515,7 +479,7 @@ The harmonically weighted filter is computed using the fast Fourier transform.
 julia> hwfilter(randn(100,1))
 ```
 """
-function hwfilter(x::Array)
+function hwfilter(x::AbstractArray)
     T = length(x)
     np2 = nextpow(2, 2 * T - 1)
     
@@ -551,9 +515,57 @@ julia> hwp_gen(100)
 """
 function hwp_gen(T::Int; μ=0.0, σ=1.0)
     ϵ = hwfilter(rand(Normal(0.0, σ), T))
-    x = μ .+ ϵ 
+    x = μ .+ ϵ
 
-    rand(Normal(μ, σ), T)
+    return x
+end
+
+
+"""
+    davies_harte(acv::AbstractArray)
+
+Generate a stationary Gaussian time series with autocovariances `acv` at lags 0, 1, ..., `T-1` using the circulant embedding method of Davies and Harte (1987).
+
+# Arguments
+- `acv::AbstractArray`: autocovariances at lags 0, 1, ..., `T-1`
+
+# Output
+- `x::Vector`: time series of length `T = length(acv)` whose covariance matrix is exactly the Toeplitz matrix of `acv`
+
+# Notes
+The method embeds the covariance matrix in a circulant matrix of size `2(T-1)` and uses the fast Fourier transform, so the cost is `O(T log T)`.
+It is exact, in contrast to the truncated filters used in `fi_gen` or `csa_gen`, but it requires the circulant embedding to be nonnegative definite. This holds for the fractionally differenced process with `d∈(-1/2,1/2)`; an error is thrown otherwise.
+See `fi_exact_gen` and `csa_exact_gen` for wrappers.
+
+# References
+Davies, R. B., and Harte, D. S. (1987). Tests for Hurst effect. Biometrika, 74(1), 95-101.
+
+# Examples
+```julia-repl
+julia> davies_harte(0.5 .^ (0:99))
+```
+"""
+function davies_harte(acv::AbstractArray)
+    T = length(acv)
+
+    if T == 1
+        return sqrt(acv[1]) .* randn(1)
+    end
+
+    M = 2 * (T - 1)
+    c = [vec(acv); acv[T-1:-1:2]] # first row of the circulant matrix
+
+    λ = real(fft(c)) # eigenvalues of the circulant matrix
+
+    if minimum(λ) < -1e-8 * maximum(λ)
+        error("The circulant embedding is not nonnegative definite. The Davies-Harte method cannot be used for these autocovariances.")
+    end
+    λ = max.(λ, 0)
+
+    ξ = randn(M) .+ im .* randn(M)
+    y = fft(sqrt.(λ ./ M) .* ξ) # real and imaginary parts are independent draws
+
+    x = real(y[1:T])
 
     return x
 end

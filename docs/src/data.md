@@ -12,21 +12,27 @@ The package includes the following data sets:
 
 ## Loading the Data
 
-The data are stored in `CSV` files.
-
-Hence, loading the data requires the [CSV.jl](https://csv.juliadata.org/stable/) and [DataFrames.jl](https://dataframes.juliadata.org/stable/) packages.
+The data are stored in `CSV` files and are returned as named tuples of vectors, so no additional packages are needed.
 
 You can load the data sets with the following commands:
 
 ```julia
 using LongMemory
-NileMin = NileData()
-NorthernHemTemp = NHTempData()
+NileMin = NileData()          # NileMin.Year, NileMin.NileMin
+NorthernHemTemp = NHTempData() # NorthernHemTemp.NHTemp
 ```
 
-Moreover, you can generate plots of the data and associated long memory processes with the following commands:
+The named tuples are [Tables.jl](https://tables.juliadata.org/stable/) tables, so they can be converted to a `DataFrame` with [DataFrames.jl](https://dataframes.juliadata.org/stable/):
 
 ```julia
+using DataFrames
+DataFrame(NileData())
+```
+
+Moreover, you can generate plots of the data and associated long memory processes with the following commands, which require [Plots.jl](https://docs.juliaplots.org/stable/):
+
+```julia
+using Plots
 NileDataPlot()
 NHTempDataPlot()
 ```

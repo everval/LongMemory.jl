@@ -48,6 +48,15 @@ Once installed, the package can be imported with the command:
 julia> using LongMemory
 ```
 
+The plotting functions (e.g. `LMPlot`, `NileDataPlot`, `fi_forecast_plot`) are available once [Plots.jl](https://docs.juliaplots.org/stable/) is loaded:
+
+```julia
+julia> using LongMemory, Plots
+julia> NileDataPlot()
+```
+
+Since version 2.0, Plots.jl is not installed together with LongMemory.jl; add it with `pkg> add Plots` if needed.
+
 ## Documentation
 
 The package documentation is available [here](https://everval.github.io/LongMemory.jl/) or the link below.

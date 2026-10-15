@@ -10,21 +10,45 @@ This module contains functions to estimate the long memory parameter of a time s
 """
 module LogPeriodEstimators
 
-include("GeneratingFunctions.jl")
-import .GeneratingFunctions: fracdiff
+import ..plots_required
 
-include("ClassicEstimators.jl")
-import .ClassicEstimators: smean, sstd
+using ..GeneratingFunctions: fracdiff
+using ..ClassicEstimators: smean, sstd
 
-using FFTW, Optim, Plots
+using FFTW, Optim
 
-export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot, periodogram
+export gph_est, gph_est_variance, whittle_est, exact_whittle_est, whittle_est_variance, exact_whittle_est_variance, periodogram, periodogram_plot, feasible_exact_whittle_est
+
+# Plotting functions. Their methods are defined in the package extension LongMemoryPlotsExt, which is loaded with `using Plots`.
+function periodogram_plot end
+
+periodogram_plot(args...; kwargs...) = plots_required(periodogram_plot, args)
 
 
 """
-    periodogram_plot(x::Array; slope::Bool=true)
+    freq_band(T::Int, m::Real, l::Real)
+
+Internal helper: indices into the output of `periodogram` for the Fourier frequencies `λ_j = 2πj/T`, `j = max(1, round(T^l)), ..., round(T^m)`.
+The zero frequency (index 1) is always excluded, and the band is capped at the largest available Fourier frequency.
+"""
+function freq_band(T::Int, m::Real, l::Real)
+    if m < l
+        error("Taper initial is greater than final")
+    end
+
+    jmax = min(round(Int, T^m), T ÷ 2)
+    jmin = max(round(Int, T^l), 1)
+
+    return (jmin+1):(jmax+1)
+end
+
+
+"""
+    periodogram_plot(x::AbstractArray; slope::Bool=false)
 
 Plots the log-periodogram of a time series `x`.
+
+Requires Plots.jl to be loaded, e.g. with `using LongMemory, Plots`.
 
 # Arguments
 - `x::Vector`: time series
@@ -33,40 +57,18 @@ Plots the log-periodogram of a time series `x`.
 - `p1::Plots.Plot`: log-periodogram
 
 # Optional arguments
-- `slope::Bool`: If true, the slope of the linear regression is displayed.
+- `slope::Bool`: If true, the slope of the linear regression is displayed. Default is false.
 
 # Examples
 ```julia-repl
 julia> periodogram_plot(randn(100,1))
 ```
 """
-function periodogram_plot(x::Array; slope::Bool=false)
-    T = length(x)
-
-    I_wc, wc = periodogram(x)
-
-    I_w = I_wc[2:end]
-    w = wc[2:end]
-
-    if slope == false
-        p1 = plot(w, I_w, xlabel="log-frequency", ylabel="log-periodogram", label="", xaxis=:log, yaxis=:log, line=:scatter)
-    end
-
-    if slope == true
-        p1 = plot(log.(w), log.(I_w), xlabel="log-frequency", ylabel="log-periodogram", label="", line=:scatter)
-        oldylims = ylims(p1)
-        X = [ones(length(w)) log.(w)]
-        beta = X \ log.(I_w)
-        plot!(log.(w), X*beta, line=:dash, label=string("Slope = ", round(beta[2],digits=4)), linewidth = 3)
-        ylims!(p1, oldylims)
-    end
-
-    return p1
-end
+periodogram_plot(x::AbstractArray)
 
 
 """
-    periodogram(x::Array)
+    periodogram(x::AbstractArray)
 
 Compute the periodogram of a time series `x` using the fast Fourier transform.
 
@@ -82,7 +84,7 @@ Compute the periodogram of a time series `x` using the fast Fourier transform.
 julia> periodogram(randn(100,1))
 ```
 """
-function periodogram(x::Array)
+function periodogram(x::AbstractArray)
     T = length(x)
 
     I_w = abs.(rfft(x)) .^ 2 ./ T
@@ -95,7 +97,7 @@ end
 
 
 """
-    gph_est(x::Array; m::Real=0.8, l=0, br=0::Int)
+    gph_est(x::AbstractArray; m::Real=0.8, l=0, br=0::Int)
 
 Estimate the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -109,9 +111,9 @@ Estimate the long memory parameter of a time series `x` using the log-periodogra
 - `d::Float64`: long memory parameter
 
 # Notes
-The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
+The function considers the periodogram of the time series `x` at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded). The zero frequency is always excluded, so `round(T^m)` frequencies are used when `l = 0`.
 The default values of `m` and `l` are 0.8 and 0, respectively.
-The condition `m < l` must hold.
+The condition `l < m` must hold.
 
 The default value of `br` is 0 which returns the original GPH log-periodogram estimator.
 
@@ -120,20 +122,14 @@ The default value of `br` is 0 which returns the original GPH log-periodogram es
 julia> gph_est(randn(100,1))
 ```
 """
-function gph_est(x::Array; m::Real=0.8, l=0, br=0::Int)
+function gph_est(x::AbstractArray; m::Real=0.8, l=0, br=0::Int)
     T = length(x)
-
-    if m < l
-        error("Taper initial is greater than final")
-    end
-
-    last = round(Int, T^m)
-    first = max(round(Int, T^l), 2)
+    band = freq_band(T, m, l)
 
     I_wc, wc = periodogram(x)
 
-    I_w = I_wc[first:last]
-    w = wc[first:last]
+    I_w = I_wc[band]
+    w = wc[band]
 
     Y = log.(I_w)
     X = [-2 * log.(w) w .^ collect(0:2:(2*br))']
@@ -144,7 +140,7 @@ end
 
 
 """
-    gph_est_variance(x::Array; m::Real=0.8, l=0, br=0::Int)
+    gph_est_variance(x::AbstractArray; m::Real=0.8, l=0, br=0::Int)
 
 Estimate the variance of the long memory parameter of a time series `x` using the log-periodogram estimator. See [Geweke and Porter-Hudak (1983)](https://onlinelibrary.wiley.com/doi/10.1111/j.1467-9892.1983.tb00371.x) and [Andrews and Guggenberger (2003)](https://www.jstor.org/stable/3082070) for details.
 
@@ -163,10 +159,10 @@ Multiple dispatch is used for computation. If the first input is an integer, the
 
 # Examples
 ```julia-repl
-julia> gph_est_variance(fi(100,0.4))
+julia> gph_est_variance(fi_gen(100,0.4))
 ```
 """
-function gph_est_variance(x::Array; m::Real=0.8, br=0::Int)
+function gph_est_variance(x::AbstractArray; m::Real=0.8, br=0::Int)
     T = length(x)
     last = round(Int, T^m)
 
@@ -212,7 +208,7 @@ Multiple dispatch is used for computation. If the first input is an integer, the
 
 # Examples
 ```julia-repl
-julia> gph_est_variance(100,0.4)
+julia> gph_est_variance(100; m=0.8)
 ```
 """
 function gph_est_variance(T::Int; m::Real=0.8, br=0::Int)
@@ -241,7 +237,7 @@ function gph_est_variance(T::Int; m::Real=0.8, br=0::Int)
 end
 
 """
-    whittle_llk(d, x::Array; m::Real=0.8, l=0)
+    whittle_llk(d, x::AbstractArray; m::Real=0.8, l=0)
 
 Compute the Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See Künsch (1987) for details.
 
@@ -255,8 +251,8 @@ Compute the Whittle log-likelihood function of a time series `x` for a given lon
 - `Q::Float64`: Whittle log-likelihood function
 
 # Notes
-The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
-The condition `m < l` must hold. 
+The function considers the periodogram of the time series `x` at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded). The zero frequency is always excluded, so `round(T^m)` frequencies are used when `l = 0`.
+The condition `l < m` must hold. 
 The default values of `m` and `l` are 0.8 and 0, respectively.
 
 # Examples
@@ -264,21 +260,15 @@ The default values of `m` and `l` are 0.8 and 0, respectively.
 julia> whittle_llk(0.4,randn(100,1))
 ```
 """
-function whittle_llk(d, x::Array; m::Real=0.8, l=0)
+function whittle_llk(d, x::AbstractArray; m::Real=0.8, l=0)
 
     T = length(x)
-
-    if m < l
-        error("Taper initial is greater than final")
-    end
-
-    first = max(round(Int, T^l), 2)
-    last = round(Int, T^m)
+    band = freq_band(T, m, l)
 
     I_w0, w0 = periodogram(x)
 
-    I_w = I_w0[first:last]
-    w = w0[first:last]
+    I_w = I_w0[band]
+    w = w0[band]
 
     G = smean(I_w .* (w .^ (2 * d))) 
     Q = log(G) - 2 * d * smean(log.(w)) 
@@ -288,7 +278,7 @@ end
 
 
 """
-    whittle_est(x::Array; m::Real=0.8, l=0)
+    whittle_est(x::AbstractArray; m::Real=0.8, l=0)
 
 Estimate the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
@@ -301,8 +291,8 @@ Estimate the long memory parameter of a time series `x` using the Whittle log-li
 - `d::Float64`: long memory parameter
 
 # Notes
-The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
-The condition `m < l` must hold.
+The function considers the periodogram of the time series `x` at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded). The zero frequency is always excluded, so `round(T^m)` frequencies are used when `l = 0`.
+The condition `l < m` must hold.
 The default values of `m` and `l` are 0.8 and 0, respectively.
 
 # Examples
@@ -310,7 +300,7 @@ The default values of `m` and `l` are 0.8 and 0, respectively.
 julia> whittle_est(randn(100,1))
 ```
 """
-function whittle_est(x::Array; m::Real=0.8, l=0)
+function whittle_est(x::AbstractArray; m::Real=0.8, l=0)
     d0 = gph_est(x; m=m, l=l)
     whittle = optimize(d -> whittle_llk(first(d), x; m=m, l=l), [d0])
 
@@ -318,7 +308,7 @@ function whittle_est(x::Array; m::Real=0.8, l=0)
 end
 
 """
-    whittle_est_variance(x::Array; m::Real=0.8)
+    whittle_est_variance(x::AbstractArray; m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series `x` using the Whittle log-likelihood function. See Künsch (1987) for details.
 
@@ -337,10 +327,10 @@ The variance is the same as the one from using the exact Whittle log-likelihood 
 
 # Examples
 ```julia-repl
-julia> whittle_est_variance(fi(100,0.4))
+julia> whittle_est_variance(fi_gen(100,0.4))
 ```
 """
-function whittle_est_variance(x::Array; m::Real=0.8)
+function whittle_est_variance(x::AbstractArray; m::Real=0.8)
     T = length(x)
     last = round(Int, T^m)
 
@@ -370,7 +360,7 @@ The variance is the same as the one from using the exact Whittle log-likelihood 
 
 # Examples
 ```julia-repl
-julia> whittle_est_variance(100,0.4)
+julia> whittle_est_variance(100; m=0.8)
 ```
 """
 function whittle_est_variance(T::Int; m::Real=0.8)
@@ -384,7 +374,7 @@ end
 
 
 """
-    exact_whittle_llk(d, x::Array; m::Real=0.8, l=0)
+    exact_whittle_llk(d, x::AbstractArray; m::Real=0.8, l=0)
 
 Compute the exact Whittle log-likelihood function of a time series `x` for a given long memory parameter `d`. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
@@ -398,8 +388,8 @@ Compute the exact Whittle log-likelihood function of a time series `x` for a giv
 - `Q::Float64`: Whittle log-likelihood function
 
 # Notes
-The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
-The condition `m < l` must hold.
+The function considers the periodogram of the time series `x` at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded). The zero frequency is always excluded, so `round(T^m)` frequencies are used when `l = 0`.
+The condition `l < m` must hold.
 The default values of `m` and `l` are 0.8 and 0, respectively.
 The function demeans the time series `x` for long memory estimation.
 
@@ -408,22 +398,16 @@ The function demeans the time series `x` for long memory estimation.
 julia> exact_whittle_llk(0.4,randn(100,1))
 ```
 """
-function exact_whittle_llk(d, x::Array; m::Real=0.8, l=0)
+function exact_whittle_llk(d, x::AbstractArray; m::Real=0.8, l=0)
     T = length(x)
-
-    if m < l
-        error("Taper initial is greater than final")
-    end
-
-    last = round(Int, T^m)
-    first = max(round(Int, T^l), 2)
+    band = freq_band(T, m, l)
 
     dx = fracdiff(x, d)
 
     I_w0, w0 = periodogram(dx)
 
-    I_w = I_w0[first:last]
-    w = w0[first:last]
+    I_w = I_w0[band]
+    w = w0[band]
 
     G = smean(I_w) 
     Q = log(G) - 2 * d * smean(log.(w)) 
@@ -433,7 +417,7 @@ end
 
 
 """
-    exact_whittle_est(x::Array; m::Real=0.8, l=0, detrend = true)
+    exact_whittle_est(x::AbstractArray; m::Real=0.8, l=0, demean::Bool = true)
 
 Estimate the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. See [Shimotsu and Phillips (2005)](https://doi.org/10.1214/009053605000000309) for details.
 
@@ -441,23 +425,24 @@ Estimate the long memory parameter of a time series `x` using the exact Whittle 
 - `x::Vector`: time series
 - `m∈(0,1)::Float64`: taper final
 - `l∈(0,1)::Float64`: taper initial
-- `detrend::Bool`: If true, the time series is demeaned before estimation.
+- `demean::Bool`: If true, the time series is demeaned with the sample mean before estimation.
 
 # Output
 - `d::Float64`: long memory parameter
 
 # Notes
-The function considers the periodogram of the time series `x` for frequencies in the interval `[T^l,T^m]`. The zero frequency is always excluded.
-The condition `m < l` must hold.
+The function considers the periodogram of the time series `x` at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded). The zero frequency is always excluded, so `round(T^m)` frequencies are used when `l = 0`.
+The condition `l < m` must hold.
 The default values of `m` and `l` are 0.8 and 0, respectively.
+The sample mean is a poor estimator of the mean when `d > 1/2`; see `feasible_exact_whittle_est` for a version that is robust to an unknown mean.
 
 # Examples
 ```julia-repl
 julia> exact_whittle_est(randn(100,1))
 ```
 """
-function exact_whittle_est(x::Array; m::Real=0.8, l=0, detrend = true)
-    if detrend == true
+function exact_whittle_est(x::AbstractArray; m::Real=0.8, l=0, demean::Bool = true)
+    if demean == true
         x = x .- smean(x)
     end
     d0 = gph_est(x; m=m, l=l)
@@ -468,7 +453,59 @@ end
 
 
 """
-    exact_whittle_est_variance(x::Array; m::Real=0.8)
+    feasible_exact_whittle_est(x::AbstractArray; m::Real=0.8, l=0)
+
+Estimate the long memory parameter of a time series `x` with unknown mean using the feasible exact local Whittle estimator of [Shimotsu (2010)](https://doi.org/10.1017/S0266466609100075).
+
+# Arguments
+- `x::Vector`: time series
+- `m∈(0,1)::Float64`: taper final
+- `l∈(0,1)::Float64`: taper initial
+
+# Output
+- `d::Float64`: long memory parameter
+
+# Notes
+The exact Whittle objective is evaluated on `x - μ(d)`, where the mean estimate depends on `d`: `μ(d) = w(d) x̄ + (1 - w(d)) x₁`, with `w(d) = 1` for `d ≤ 1/2`, `w(d) = (1 + cos(4πd))/2` for `1/2 < d < 3/4`, and `w(d) = 0` for `d ≥ 3/4`.
+The sample mean is a good estimator of the mean for `d < 1/2`, while the first observation is a better one for `d > 1/2`.
+The objective is minimized over `d∈[-1/2, 2]` with Brent's method. The asymptotic variance is `1/(4m)`, the same as for the (exact) Whittle estimator, see `exact_whittle_est_variance`.
+The function considers the periodogram at the Fourier frequencies `2πj/T` for `j` in `[T^l,T^m]` (rounded), excluding the zero frequency.
+
+# Examples
+```julia-repl
+julia> feasible_exact_whittle_est(5 .+ fi_gen(500, 0.8))
+```
+"""
+function feasible_exact_whittle_est(x::AbstractArray; m::Real=0.8, l=0)
+    whittle = optimize(d -> feasible_exact_whittle_llk(d, x; m=m, l=l), -1 / 2, 2.0)
+
+    return Optim.minimizer(whittle)
+end
+
+
+"""
+    feasible_exact_whittle_llk(d::Real, x::AbstractArray; m::Real=0.8, l=0)
+
+Compute the feasible exact Whittle objective function of Shimotsu (2010) for a time series `x` with unknown mean. Internal function used by `feasible_exact_whittle_est`.
+"""
+function feasible_exact_whittle_llk(d::Real, x::AbstractArray; m::Real=0.8, l=0)
+    # Weight of the sample mean in the estimate of the mean
+    if d <= 1 / 2
+        wd = 1.0
+    elseif d < 3 / 4
+        wd = (1 + cos(4 * π * d)) / 2
+    else
+        wd = 0.0
+    end
+
+    μ = wd * smean(x) + (1 - wd) * x[1]
+
+    return exact_whittle_llk(d, x .- μ; m=m, l=l)
+end
+
+
+"""
+    exact_whittle_est_variance(x::AbstractArray; m::Real=0.8)
 
 Estimate the variance of the estimator for the long memory parameter of a time series `x` using the exact Whittle log-likelihood function. 
 
@@ -487,26 +524,26 @@ The variance is the same as the one from using the Whittle log-likelihood functi
 
 # Examples
 ```julia-repl
-julia> exact_whittle_est_variance(fi(100,0.4))
+julia> exact_whittle_est_variance(fi_gen(100,0.4))
 ```
 """
-function exact_whittle_est_variance(x::Array; m::Real=0.8)
+function exact_whittle_est_variance(x::AbstractArray; m::Real=0.8)
     return whittle_est_variance(x; m=m)
 end
 
 """ 
     exact_whittle_est_variance(T::Int; m::Real=0.8)
 
-Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the exaxct Whittle log-likelihood function.
+Estimate the variance of the estimator for the long memory parameter of a time series of length `T` using the exact Whittle log-likelihood function.
 
 # Arguments
 - `T::Int`: length of the time series
 
 # Optional arguments
-- `m∈(0,1)::Float64`: taper final
+- `m∈(0,1)::Float64`: taper final. Default is 0.8
 
 # Output
-- `varb::Float64`: variance of the estimator. Default is 0.8
+- `varb::Float64`: variance of the estimator
 
 # Notes
 Multiple dispatch is used for computation. If the first input is an integer, the function interprets it as the sample size; otherwise, it computes the sample size from the length of the time series.
@@ -514,7 +551,7 @@ The variance is the same as the one from using the Whittle log-likelihood functi
 
 # Examples
 ```julia-repl
-julia> exact_whittle_est_variance(100,0.4)
+julia> exact_whittle_est_variance(100; m=0.8)
 ```
 """
 function exact_whittle_est_variance(T::Int; m::Real=0.8)
