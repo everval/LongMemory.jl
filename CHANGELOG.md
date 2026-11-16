@@ -42,9 +42,8 @@ This is a breaking release. The main changes for users are that plotting require
 ### New Features
 
 #### Estimation and testing
-- `arfima_whittle_est`: parametric Whittle estimation of ARFIMA(p,d,q) models, imposing stationarity and invertibility. It and `arfima_mle_est` run Nelder-Mead with a tight tolerance (`g_tol = 1e-12`, up to 10,000 iterations), as the default tolerance stopped the Whittle optimization early, often at the boundary `d ≈ 1/2`.
+- `arfima_whittle_est`: parametric Whittle estimation of ARFIMA(p,d,q) models, imposing stationarity and invertibility.
 - `arfima_mle_est`, `arfima_llk`: exact maximum likelihood estimation of ARFIMA(p,d,q) models (Sowell, 1992), with the likelihood evaluated by the Durbin-Levinson algorithm.
-- Standard errors for the parametric estimators: `fi_mle_est`, `csa_mle_est`, `arfima_mle_est` and `arfima_whittle_est` return them with the keyword `se = true`, appended to the usual output (e.g. `d, σ, se_d, se_σ = fi_mle_est(x; se = true)`). They come from the numerical Hessian of the (concentrated) log-likelihood at the optimum, mapped to the model parameters with the delta method; they are `NaN`, with a warning, if the estimates are on the boundary of the parameter space or the Hessian is not positive definite. `har_est(x; se = true)` also returns the (classical OLS) standard errors of `β`. The default output is unchanged.
 - `arfima_var_vals`, `arfima_cor_vals`, `arfima_var_matrix`: autocovariances, autocorrelations and autocovariance matrix of the stationary ARFIMA(p,d,q) process, exact up to rounding error, also for repeated or complex AR roots.
 - `feasible_exact_whittle_est`: the feasible exact local Whittle estimator of Shimotsu (2010) for series with unknown mean, valid also for `d > 1/2`.
 - `durbin_levinson`: one-step predictions and prediction error variances of a stationary series. `fi_llk`, `csa_llk`, `fi_mle_est` and `csa_mle_est` now use it, so the likelihood costs `O(T²)` instead of `O(T³)`, with the same values (e.g. `fi_mle_est` with `T = 2000` takes 0.06 s instead of 1.2 s).
@@ -61,8 +60,6 @@ This is a breaking release. The main changes for users are that plotting require
 #### Forecasting
 - `arfima_forecast`, `arfima_forecast_plot`, `arfima_ar_coefs`, `arfima_ma_coefs`: forecasting with ARFIMA(p,d,q) models.
 - `fi_ma_coefs`: MA coefficients of the fractionally differenced process.
-- `hitransform(x; coefs)`: the Gregory coefficients can be precomputed with `gregory_coeffs(length(x) - 1)` and passed with the keyword `coefs`, so filtering many series of the same length does not recompute them (`O(T²)` each time). The default output is unchanged. `gregory_coeffs(0)` now returns an empty vector instead of throwing a `BoundsError`.
-- `gregory_coeffs(N)` costs `O(N log N)` instead of `O(N²)` for `N > 512`: it computes the power series inverse of `-log(1-z)/z` by Newton iteration with FFT multiplication (e.g. 0.6 ms instead of 25 ms for `N = 10,000`, and 9 ms instead of 2.6 s for `N = 100,000`). For `N ≤ 512` it still uses the recursion. The two methods agree up to an absolute error of order `1e-16`, so `hitransform` output for series longer than 513 changes only by rounding error.
 
 ### Other changes
 - `csa_mle_est` uses deterministic starting values (`p = 2`, `q = 2(1-d)` with `d` from `gph_est`) instead of random ones, so the estimates are reproducible.
@@ -107,6 +104,19 @@ Some of these fixes change numerical output.
 
 #### Documentation
 - Fixed docstring examples that did not run or used invalid parameters (e.g. `csa_var_vals` with `q < 1`). A test now runs every docstring example.
+
+## [Version 2.1.0] - Unreleased
+
+### New Features
+- Standard errors for the parametric estimators: `fi_mle_est`, `csa_mle_est`, `arfima_mle_est` and `arfima_whittle_est` return them with the keyword `se = true`, appended to the usual output (e.g. `d, σ, se_d, se_σ = fi_mle_est(x; se = true)`). They come from the numerical Hessian of the (concentrated) log-likelihood at the optimum, mapped to the model parameters with the delta method; they are `NaN`, with a warning, if the estimates are on the boundary of the parameter space or the Hessian is not positive definite. `har_est(x; se = true)` also returns the (classical OLS) standard errors of `β`. The default output is unchanged.
+- `hitransform(x; coefs)`: the Gregory coefficients can be precomputed with `gregory_coeffs(length(x) - 1)` and passed with the keyword `coefs`, so filtering many series of the same length does not recompute them (`O(T²)` each time). The default output is unchanged. `gregory_coeffs(0)` now returns an empty vector instead of throwing a `BoundsError`.
+
+### Performance Improvements
+- `gregory_coeffs(N)` costs `O(N log N)` instead of `O(N²)` for `N > 512`: it computes the power series inverse of `-log(1-z)/z` by Newton iteration with FFT multiplication (e.g. 0.6 ms instead of 25 ms for `N = 10,000`, and 9 ms instead of 2.6 s for `N = 100,000`). For `N ≤ 512` it still uses the recursion. The two methods agree up to an absolute error of order `1e-16`, so `hitransform` output for series longer than 513 changes only by rounding error.
+
+### Other changes
+- `arfima_whittle_est` and `arfima_mle_est` run Nelder-Mead with a tight tolerance (`g_tol = 1e-12`, up to 10,000 iterations), as the default tolerance stopped the Whittle optimization early, often at the boundary `d ≈ 1/2`. This can change their estimates.
+- CI: the documentation is deployed by a single job, so deploys no longer collide on `gh-pages`. The tests of `lo_rs_test` and `vs_test` check the rejection rate over 50 draws instead of a single draw, which failed on Julia 1.10.
 
 
 <!-- Links generated by Changelog.jl -->
