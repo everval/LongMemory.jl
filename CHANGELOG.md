@@ -62,6 +62,7 @@ This is a breaking release. The main changes for users are that plotting require
 - `arfima_forecast`, `arfima_forecast_plot`, `arfima_ar_coefs`, `arfima_ma_coefs`: forecasting with ARFIMA(p,d,q) models.
 - `fi_ma_coefs`: MA coefficients of the fractionally differenced process.
 - `hitransform(x; coefs)`: the Gregory coefficients can be precomputed with `gregory_coeffs(length(x) - 1)` and passed with the keyword `coefs`, so filtering many series of the same length does not recompute them (`O(T²)` each time). The default output is unchanged. `gregory_coeffs(0)` now returns an empty vector instead of throwing a `BoundsError`.
+- `gregory_coeffs(N)` costs `O(N log N)` instead of `O(N²)` for `N > 512`: it computes the power series inverse of `-log(1-z)/z` by Newton iteration with FFT multiplication (e.g. 0.6 ms instead of 25 ms for `N = 10,000`, and 9 ms instead of 2.6 s for `N = 100,000`). For `N ≤ 512` it still uses the recursion. The two methods agree up to an absolute error of order `1e-16`, so `hitransform` output for series longer than 513 changes only by rounding error.
 
 ### Other changes
 - `csa_mle_est` uses deterministic starting values (`p = 2`, `q = 2(1-d)` with `d` from `gph_est`) instead of random ones, so the estimates are reproducible.

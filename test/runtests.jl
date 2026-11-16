@@ -102,6 +102,17 @@ end
     @test_throws ArgumentError hitransform(randn(10); coefs = gregory_coeffs(10))
     @test_throws ArgumentError hitransform(randn(10); coefs = gregory_coeffs(8))
     @test_throws ArgumentError hitransform([2.0]; coefs = [0.5])
+    # O(N log N) Newton iteration agrees with the O(N²) recursion
+    let F = LongMemory.Forecasters
+        for N in (1, 2, 5, 100, 513, 1000, 4097, 10_000, 30_000)
+            @test maximum(abs.(F.gregory_coeffs_newton(N) .- F.gregory_coeffs_recursive(N))) < 1e-12
+        end
+        for seed in (0, 1, 3, 16), N in (1, 2, 5, 37, 300)
+            @test maximum(abs.(F.gregory_coeffs_newton(N, seed) .- F.gregory_coeffs_recursive(N))) < 1e-12
+        end
+        @test gregory_coeffs(512) == F.gregory_coeffs_recursive(512)
+        @test maximum(abs.(gregory_coeffs(2000) .- F.gregory_coeffs_recursive(2000))) < 1e-12
+    end
     @test fi_forecast(ones(10), 1, 0)[11] ≈ 1.0 # the sample mean is added back
     @test fi_forecast(ones(10), 1, 0, 1)[11] ≈ 1.0
     @test fi_forecast([1.0; -1.0], 1, 0.4)[3] ≈ 0.4 * (-1.0) + 0.4 * 0.6 / 2 * 1.0
