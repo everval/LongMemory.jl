@@ -51,6 +51,60 @@ end
 
 
 """
+    numerical_hessian(f::Function, θ::AbstractVector)
+
+Central finite-difference Hessian of the scalar function `f` at `θ`. Internal function used to compute standard errors of the parametric estimators.
+"""
+function numerical_hessian(f::Function, θ::AbstractVector)
+    n = length(θ)
+    h = 1e-3 .* max.(1, abs.(θ))
+    shift(i) = (e = zeros(n); e[i] = h[i]; e)
+    f0 = f(θ)
+    H = zeros(n, n)
+    for i = 1:n
+        ei = shift(i)
+        H[i, i] = (f(θ + ei) - 2 * f0 + f(θ - ei)) / h[i]^2
+        for j = i+1:n
+            ej = shift(j)
+            H[i, j] = (f(θ + ei + ej) - f(θ + ei - ej) - f(θ - ei + ej) + f(θ - ei - ej)) / (4 * h[i] * h[j])
+            H[j, i] = H[i, j]
+        end
+    end
+    return H
+end
+
+"""
+    delta_method_se(f::Function, g::Function, θ::AbstractVector, n::Real)
+
+Standard errors of the parameters `g(θ)` when `θ` minimizes the per-observation objective `f` computed from `n` observations (or frequencies).
+The covariance of `θ` is the inverse of `n` times the Hessian of `f`, and the delta method with a numerical Jacobian of `g` maps it to `g(θ)`.
+Returns `NaN`s, with a warning, if the optimum is numerically on the boundary of the parameter space (some `|θᵢ| > 6`), where the asymptotic theory does not apply, or if the Hessian is not positive definite, e.g. if the likelihood is flat. Internal function used to compute standard errors of the parametric estimators.
+"""
+function delta_method_se(f::Function, g::Function, θ::AbstractVector, n::Real)
+    k = length(g(θ))
+    if any(abs.(θ) .> 6)
+        @warn "The estimates are on the boundary of the parameter space, standard errors are not available."
+        return fill(NaN, k)
+    end
+    F = cholesky(Symmetric(numerical_hessian(f, θ)); check = false)
+    if !issuccess(F)
+        @warn "The Hessian of the objective is not positive definite, standard errors are not available."
+        return fill(NaN, k)
+    end
+    V = inv(F) / n
+
+    J = zeros(k, length(θ))
+    for i in eachindex(θ)
+        h = 1e-5 * max(1, abs(θ[i]))
+        e = zeros(length(θ)); e[i] = h
+        J[:, i] = (g(θ + e) - g(θ - e)) / (2 * h)
+    end
+
+    return sqrt.(max.(diag(J * V * J'), 0))
+end
+
+
+"""
     durbin_levinson(acv::AbstractArray, x::AbstractArray)
 
 Computes the one-step-ahead best linear predictions of a stationary time series `x` and their mean squared errors, given the autocovariances `acv`, using the Durbin-Levinson algorithm.
@@ -227,39 +281,50 @@ end
 
 
 """
-    fi_mle_est(x::AbstractArray)
+    fi_mle_est(x::AbstractArray; se::Bool = false)
 
 Computes the maximum likelihood estimate of the fractional differencing parameter and the standard deviation of the fractional differenced process given the data `x`.
 
 # Arguments
 - `x::Array`: The data.
 
+# Optional arguments
+- `se::Bool`: If true, the standard errors of the estimates are also returned. Default is false.
+
 # Output
 - `d::Real`: The maximum likelihood estimate of the fractional differencing parameter.
 - `σ::Real`: The maximum likelihood estimate of the standard deviation of the fractional differenced process.
+- `se_d::Real`, `se_σ::Real`: The standard errors of `d` and `σ`. Only if `se = true`.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.
 The likelihood is evaluated with the Durbin-Levinson algorithm, see `durbin_levinson`.
+The standard error of `d` comes from the numerical Hessian of the concentrated log-likelihood at the optimum, mapped from the unconstrained scale to `d` with the delta method. The standard error of `σ` is the asymptotic `σ/√(2T)`, as `σ` is asymptotically independent of `d`. The `t`-statistic of `H₀: d = 0` is `d/se_d`.
 
 # Examples
 ```julia
 julia> fi_mle_est(randn(100,1))
+
+julia> fi_mle_est(randn(100,1); se = true)
 ```
 """
-function fi_mle_est(x::AbstractArray)
+function fi_mle_est(x::AbstractArray; se::Bool = false)
     x = x .- smean(x)
     d0 = gph_est(x)
     d0 = min(0.49, d0)
     d0 = max(-0.49, d0)
     dini = log((d0 + 1 / 2) / (1 / 2 - d0))
 
-    dmle = optimize(d -> fi_llk(first(d), x), [dini]).minimizer[1]
-    dmle = - 1 / 2 + exp(dmle) / (1 + exp(dmle))
+    res = optimize(d -> fi_llk(first(d), x), [dini]).minimizer
+    dmle = - 1 / 2 + exp(res[1]) / (1 + exp(res[1]))
     xhat, v = durbin_levinson(fi_var_vals(length(x), dmle), x)
     σ = sqrt(sum((vec(x) .- xhat) .^ 2 ./ v) / length(x))
 
-    return dmle, σ
+    se || return dmle, σ
+
+    se_d, = delta_method_se(d -> fi_llk(first(d), x), d -> [-1 / 2 + exp(d[1]) / (1 + exp(d[1]))], res, length(x))
+
+    return dmle, σ, se_d, σ / sqrt(2 * length(x))
 end
 
 
@@ -431,29 +496,36 @@ end
 
 
 """
-    csa_mle_est(x::AbstractArray)
+    csa_mle_est(x::AbstractArray; se::Bool = false)
 
 Computes the maximum likelihood estimate of the parameters `p` and `q` of the CSA process and the standard deviation of the CSA process given the data `x`.
 
 # Arguments
 - `x::Array`: The data.
 
+# Optional arguments
+- `se::Bool`: If true, the standard errors of the estimates are also returned. Default is false.
+
 # Output
 - `p::Real`: The maximum likelihood estimate of the first parameter of the CSA process.
 - `q::Real`: The maximum likelihood estimate of the second parameter of the CSA process.
 - `σ::Real`: The maximum likelihood estimate of the standard deviation of the CSA process.
+- `se_p::Real`, `se_q::Real`, `se_σ::Real`: The standard errors of `p`, `q` and `σ`. Only if `se = true`.
 
 # Notes
 This function uses the `Optim` package to minimize the log-likelihood function.
 The parameters are restricted to `p∈(1,3)` and `q∈(1,3)`. The starting values are `p = 2` and `q = 2(1-d)`, with `d` the log-periodogram estimate, so the estimates are reproducible.
 The likelihood is evaluated with the Durbin-Levinson algorithm, see `durbin_levinson`.
+The standard errors of `p` and `q` come from the numerical Hessian of the concentrated log-likelihood at the optimum, mapped from the unconstrained scale with the delta method. The standard error of `σ` is the asymptotic `σ/√(2T)`. The likelihood in `(p, q)` can be flat, in which case the standard errors are large or, if the estimates are on the boundary of `(1,3)` or the Hessian is not positive definite, `NaN`.
 
 # Examples
 ```julia
 julia> csa_mle_est(randn(100,1))
+
+julia> csa_mle_est(csa_gen(1000, 2.0, 1.6); se = true)
 ```
 """
-function csa_mle_est(x::AbstractArray)
+function csa_mle_est(x::AbstractArray; se::Bool = false)
     x = x .- smean(x)
     d0 = gph_est(x)
     d0 = min(0.49, d0)
@@ -472,7 +544,11 @@ function csa_mle_est(x::AbstractArray)
     xhat, v = durbin_levinson(csa_var_vals(length(x), pmle, qmle), x)
     σ = sqrt(sum((vec(x) .- xhat) .^ 2 ./ v) / length(x))
 
-    return pmle, qmle, σ
+    se || return pmle, qmle, σ
+
+    se_pq = delta_method_se(pq -> csa_llk(first(pq), last(pq), x), pq -> 1 .+ 2 .* (exp.(pq) ./ (1 .+ exp.(pq))), res, length(x))
+
+    return pmle, qmle, σ, se_pq[1], se_pq[2], σ / sqrt(2 * length(x))
 end
 
 
@@ -514,7 +590,7 @@ end
 
 
 """
-    arfima_whittle_est(x::AbstractArray, p::Int, q::Int)
+    arfima_whittle_est(x::AbstractArray, p::Int, q::Int; se::Bool = false)
 
 Estimates the parameters of the ARFIMA(p,d,q) model by minimizing the Whittle approximation to the Gaussian likelihood in the frequency domain.
 
@@ -523,17 +599,22 @@ Estimates the parameters of the ARFIMA(p,d,q) model by minimizing the Whittle ap
 - `p::Int`: The order of the autoregressive polynomial.
 - `q::Int`: The order of the moving average polynomial.
 
+# Optional arguments
+- `se::Bool`: If true, the standard errors of the estimates are also returned. Default is false.
+
 # Output
 - `d::Real`: The estimate of the fractional differencing parameter.
 - `AR::Array`: The estimates of the AR coefficients `φ`, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`.
 - `MA::Array`: The estimates of the MA coefficients `θ`, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
 - `σ::Real`: The estimate of the standard deviation of the innovations.
+- `se_d::Real`, `se_AR::Array`, `se_MA::Array`, `se_σ::Real`: The standard errors of `d`, `AR`, `MA` and `σ`. Only if `se = true`.
 
 # Notes
 The model is `φ(L)(1-L)^d x_t = θ(L)ε_t`, the same parametrization used by `arfima_gen`.
 The objective is the concentrated Whittle function `log(mean(I_j/g_j)) + mean(log(g_j))` over the Fourier frequencies `2πj/T`, `j = 1, ..., floor((T-1)/2)`, where `g` is the spectral density up to the factor `σ²/(2π)`.
 Stationarity and invertibility are imposed by optimizing over `d∈(-1/2,1/2)` and over the partial autocorrelations of the AR and MA polynomials (Monahan, 1984). Hence, nonstationary data should be differenced before estimation.
 The estimator does not depend on the mean of `x`. It uses the `Optim` package, started at the log-periodogram estimate of `d` and zero ARMA coefficients.
+The standard errors come from the numerical Hessian of the concentrated Whittle objective at the optimum, which has the same asymptotic covariance as the Gaussian maximum likelihood estimator (Fox and Taqqu, 1986), mapped from the unconstrained scale to `(d, AR, MA)` with the delta method. The standard error of `σ` is the asymptotic `σ/√(2T)`. If the estimates are on the boundary of the parameter space or the Hessian is not positive definite, the standard errors are `NaN`.
 
 # References
 Fox, R., and Taqqu, M. S. (1986). Large-sample properties of parameter estimates for strongly dependent stationary Gaussian time series. The Annals of Statistics, 14(2), 517-532.
@@ -541,9 +622,11 @@ Fox, R., and Taqqu, M. S. (1986). Large-sample properties of parameter estimates
 # Examples
 ```julia
 julia> arfima_whittle_est(arfima_gen(500, 0, [0.5], 0.3, []), 1, 0)
+
+julia> arfima_whittle_est(arfima_gen(500, 0, [0.5], 0.3, []), 1, 0; se = true)
 ```
 """
-function arfima_whittle_est(x::AbstractArray, p::Int, q::Int)
+function arfima_whittle_est(x::AbstractArray, p::Int, q::Int; se::Bool = false)
     T = length(x)
 
     I_w0, w0 = periodogram(x)
@@ -557,14 +640,20 @@ function arfima_whittle_est(x::AbstractArray, p::Int, q::Int)
     d0 = max(-0.49, d0)
     θini = [log((d0 + 1 / 2) / (1 / 2 - d0)); zeros(p + q)]
 
-    res = optimize(θ -> arfima_whittle_llk(θ, I_w, w, p, q), θini).minimizer
+    # The objective is a per-frequency mean of order 0.1 that saturates in θ[1] near d = ±1/2, so the default
+    # Nelder-Mead tolerance (1e-8) stops early, often at the boundary d ≈ 1/2.
+    res = optimize(θ -> arfima_whittle_llk(θ, I_w, w, p, q), θini, NelderMead(), Optim.Options(g_tol = 1e-12, iterations = 10_000)).minimizer
 
     d, AR, MA = arfima_params(res, p, q)
 
     g = arfima_spec(w, d, AR, MA)
     σ = sqrt(smean(I_w ./ g))
 
-    return d, AR, MA, σ
+    se || return d, AR, MA, σ
+
+    se_θ = arfima_se(θ -> arfima_whittle_llk(θ, I_w, w, p, q), res, nf, p, q)
+
+    return d, AR, MA, σ, se_θ[1], se_θ[2:p+1], se_θ[p+2:p+q+1], σ / (2 * sqrt(nf))
 end
 
 
@@ -594,6 +683,15 @@ function arfima_params(θ::AbstractArray, p::Int, q::Int)
     MA = -pacf_to_coefs(tanh.(θ[p+2:p+q+1])) # 1 + Σθ_k z^k = 1 - Σψ_k z^k
 
     return d, AR, MA
+end
+
+"""
+    arfima_se(f::Function, θ::AbstractArray, n::Real, p::Int, q::Int)
+
+Standard errors of `(d, AR, MA)` at the unconstrained optimum `θ` of the per-observation objective `f` computed from `n` observations (or frequencies), by the delta method, see `delta_method_se`. Internal function used by `arfima_whittle_est` and `arfima_mle_est`.
+"""
+function arfima_se(f::Function, θ::AbstractArray, n::Real, p::Int, q::Int)
+    return delta_method_se(f, θ -> vcat(arfima_params(θ, p, q)...), θ, n)
 end
 
 """
@@ -874,7 +972,7 @@ end
 
 
 """
-    arfima_mle_est(x::AbstractArray, p::Int, q::Int)
+    arfima_mle_est(x::AbstractArray, p::Int, q::Int; se::Bool = false)
 
 Computes the exact maximum likelihood estimates of the parameters of the ARFIMA(p,d,q) model given the data `x`.
 
@@ -883,11 +981,15 @@ Computes the exact maximum likelihood estimates of the parameters of the ARFIMA(
 - `p::Int`: The order of the autoregressive polynomial.
 - `q::Int`: The order of the moving average polynomial.
 
+# Optional arguments
+- `se::Bool`: If true, the standard errors of the estimates are also returned. Default is false.
+
 # Output
 - `d::Real`: The maximum likelihood estimate of the fractional differencing parameter.
 - `AR::Array`: The maximum likelihood estimates of the AR coefficients `φ`, with the AR polynomial `1 - φ₁L - ... - φₚLᵖ`.
 - `MA::Array`: The maximum likelihood estimates of the MA coefficients `θ`, with the MA polynomial `1 + θ₁L + ... + θ_qL^q`.
 - `σ::Real`: The maximum likelihood estimate of the standard deviation of the innovations.
+- `se_d::Real`, `se_AR::Array`, `se_MA::Array`, `se_σ::Real`: The standard errors of `d`, `AR`, `MA` and `σ`. Only if `se = true`.
 
 # Notes
 The model is `φ(L)(1-L)^d x_t = θ(L)ε_t`, the same parametrization used by `arfima_gen` and `arfima_whittle_est`.
@@ -896,6 +998,7 @@ Stationarity and invertibility are imposed by optimizing over `d∈(-1/2,1/2)` a
 This function uses the `Optim` package to minimize the log-likelihood function, started at the Whittle estimates of `arfima_whittle_est`.
 With `p = q = 0` it estimates the same model as `fi_mle_est`.
 As usual for the exact maximum likelihood estimator with an estimated mean, `d` is biased downward in small samples, more so with AR terms that compete with `d` for the low-frequency dynamics (in simulations of an ARFIMA(1,0.3,0) with `φ₁ = 0.5`, the mean estimate of `d` is about 0.19 for `T = 500` and 0.27 for `T = 2000`). In such cases the likelihood can also have several local maxima. The Whittle estimator `arfima_whittle_est` does not depend on the mean and has a smaller bias.
+The standard errors come from the numerical Hessian of the concentrated log-likelihood at the optimum, mapped from the unconstrained scale to `(d, AR, MA)` with the delta method. The standard error of `σ` is the asymptotic `σ/√(2T)`. If the estimates are on the boundary of the parameter space or the Hessian is not positive definite, the standard errors are `NaN`. The estimation of the mean is not taken into account.
 
 # References
 Sowell, F. (1992). Maximum likelihood estimation of stationary univariate fractionally integrated time series models. Journal of Econometrics, 53(1-3), 165-188.
@@ -903,9 +1006,11 @@ Sowell, F. (1992). Maximum likelihood estimation of stationary univariate fracti
 # Examples
 ```julia
 julia> arfima_mle_est(arfima_gen(500, 0, [0.5], 0.3, []), 1, 0)
+
+julia> arfima_mle_est(arfima_gen(500, 0, [0.5], 0.3, []), 1, 0; se = true)
 ```
 """
-function arfima_mle_est(x::AbstractArray, p::Int, q::Int)
+function arfima_mle_est(x::AbstractArray, p::Int, q::Int; se::Bool = false)
     x = x .- smean(x)
 
     d0, AR0, MA0, = arfima_whittle_est(x, p, q)
@@ -914,14 +1019,18 @@ function arfima_mle_est(x::AbstractArray, p::Int, q::Int)
     r0 = clamp.([coefs_to_pacf(AR0); coefs_to_pacf(-MA0)], -0.99, 0.99)
     θini = [log((d0 + 1 / 2) / (1 / 2 - d0)); atanh.(r0)]
 
-    res = optimize(θ -> arfima_llk(θ, x, p, q), θini).minimizer
+    res = optimize(θ -> arfima_llk(θ, x, p, q), θini, NelderMead(), Optim.Options(g_tol = 1e-12, iterations = 10_000)).minimizer # see arfima_whittle_est
 
     d, AR, MA = arfima_params(res, p, q)
 
     xhat, v = durbin_levinson(arfima_var_vals(length(x), d, AR, MA), x)
     σ = sqrt(sum((vec(x) .- xhat) .^ 2 ./ v) / length(x))
 
-    return d, AR, MA, σ
+    se || return d, AR, MA, σ
+
+    se_θ = arfima_se(θ -> arfima_llk(θ, x, p, q), res, length(x), p, q)
+
+    return d, AR, MA, σ, se_θ[1], se_θ[2:p+1], se_θ[p+2:p+q+1], σ / sqrt(2 * length(x))
 end
 
 
@@ -961,7 +1070,7 @@ end
 
 
 """
-    har_est(x::AbstractArray; m::AbstractArray = [1 , 5 , 22])
+    har_est(x::AbstractArray; m::AbstractArray = [1 , 5 , 22], se::Bool = false)
 
 Estimates the parameters of the Heterogenous Autoregressive (HAR) model given the data `x`. See [Corsi (2009)](https://academic.oup.com/jfec/article/7/2/174/856522).
 
@@ -970,17 +1079,24 @@ Estimates the parameters of the Heterogenous Autoregressive (HAR) model given th
 
 # Optional arguments
 - `m::Array`: An array with the lags to use in the estimation. By default, the lags are 1, 5, and 22; as suggested by the original paper.
+- `se::Bool`: If true, the standard errors of `β` are also returned. Default is false.
 
 # Output
 - `β::Array`: The estimated parameters of the HAR model.
 - `σ::Real`: The estimated standard deviation of the HAR model.
+- `se_β::Array`: The standard errors of `β`, `√diag(σ²(X'X)⁻¹)`. Only if `se = true`.
+
+# Notes
+The standard errors are the classical OLS ones. They are not robust to heteroskedasticity or to autocorrelation of the errors.
 
 # Examples    
 ```julia
 julia> har_est(randn(100,1))
+
+julia> har_est(randn(100,1); se = true)
 ```
 """
-function har_est(x::AbstractArray; m::AbstractArray=[1, 5, 22])
+function har_est(x::AbstractArray; m::AbstractArray=[1, 5, 22], se::Bool = false)
     T = length(x)
     n = length(m)
     m = sort(m)
@@ -1006,7 +1122,9 @@ function har_est(x::AbstractArray; m::AbstractArray=[1, 5, 22])
 
     σ = sqrt( (err' * err) / (T - mm - n - 1) )
 
-    return β, σ
+    se || return β, σ
+
+    return β, σ, σ .* sqrt.(diag(inv(Symmetric(X' * X))))
 
 end
 

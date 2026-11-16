@@ -223,6 +223,41 @@ end
     @test length(csa_mle_est(ones(10))) == 3
     @test length(har_est(ones(50))) == 2
 
+    # Standard errors from the numerical Hessian
+    let A = [2.0 0.5; 0.5 1.0], PE = LongMemory.ParametricEstimators
+        @test PE.numerical_hessian(θ -> θ' * A * θ / 2, [0.3, -0.7]) ≈ A atol = 1e-5
+        @test PE.delta_method_se(θ -> θ' * A * θ / 2, identity, [0.0, 0.0], 50) ≈ sqrt.(diag(inv(A)) ./ 50) atol = 1e-6
+        @test_logs (:warn, r"boundary") @test isnan(PE.delta_method_se(θ -> sum(abs2, θ), identity, [8.0], 100)[1])
+        @test_logs (:warn, r"positive definite") @test isnan(PE.delta_method_se(θ -> -sum(abs2, θ), identity, [0.0], 100)[1])
+    end
+    let x = fi_exact_gen(1000, 0.3), T = 1000
+        d, σ, se_d, se_σ = fi_mle_est(x; se = true)
+        @test (d, σ) == fi_mle_est(x)
+        @test se_d ≈ sqrt(6 / (π^2 * T)) rtol = 0.1 # asymptotic variance 6/(π²T)
+        @test se_σ ≈ σ / sqrt(2T)
+        d0, AR0, MA0, σ0, se_d0, se_AR0, se_MA0, se_σ0 = arfima_mle_est(x, 0, 0; se = true)
+        @test [d0, σ0, se_d0, se_σ0] ≈ [d, σ, se_d, se_σ] atol = 5e-3
+        @test isempty(se_AR0) && isempty(se_MA0)
+        @test arfima_whittle_est(x, 0, 0; se = true)[5] ≈ se_d rtol = 0.1
+        d, AR, MA, σ, se_d, se_AR, se_MA, se_σ = arfima_mle_est(x, 1, 1; se = true)
+        @test (d, AR, MA, σ) == arfima_mle_est(x, 1, 1)
+        @test length(se_AR) == 1 && length(se_MA) == 1 && all(>(0), [se_d; se_AR; se_MA; se_σ])
+        out = arfima_whittle_est(x, 1, 1; se = true)
+        @test (out[1:4]...,) == arfima_whittle_est(x, 1, 1)
+        @test length(out) == 8 && length(out[6]) == 1 && length(out[7]) == 1
+        c = csa_exact_gen(500, 1.5, 1.6)
+        out = @test_logs min_level = Base.CoreLogging.Error csa_mle_est(c; se = true)
+        @test length(out) == 6 && out[1:3] == csa_mle_est(c)
+    end
+    let x = randn(200), (β, σ, seβ) = har_est(x; m = [1], se = true)
+        X = [ones(199) x[1:199]]
+        b = X \ x[2:200]
+        s2 = sum(abs2, x[2:200] - X * b) / (199 - 2)
+        @test (β, σ) == har_est(x; m = [1])
+        @test β ≈ b
+        @test seβ ≈ sqrt.(s2 .* diag(inv(X' * X)))
+    end
+
     # Durbin-Levinson reproduces the Cholesky-based Gaussian likelihood terms
     let x = sin.(1:200) .+ cos.(sqrt.(1:200)), V = fi_var_matrix(200, 0.3), C = cholesky(Symmetric(fi_var_matrix(200, 0.3)))
         xhat, v = durbin_levinson(fi_var_vals(200, 0.3), x)
@@ -356,6 +391,14 @@ end
     @test isempty(MA)
     @test abs(σ - 2.0) < 0.15
 
+    # Whittle estimation started at a GPH estimate above 1/2 must not stop at the boundary d ≈ 1/2
+    rng_state = copy(Random.default_rng()) # keep the random stream of the checks below unchanged
+    Random.seed!(2)
+    z = arfima_exact_gen(1000, 0.4, [0.5], [])
+    copy!(Random.default_rng(), rng_state)
+    @test gph_est(z) > 0.5
+    @test arfima_whittle_est(z, 1, 0)[1] < 0.495
+
     # ARFIMA(0,d,1) exact MLE
     z = arfima_exact_gen(2000, 0.3, [], [0.4]; μ = 1.0, σ = 2.0)
     d, AR, MA, σ = arfima_mle_est(z, 0, 1)
@@ -363,6 +406,11 @@ end
     @test isempty(AR)
     @test abs(MA[1] - 0.4) < 0.15
     @test abs(σ - 2.0) < 0.15
+
+    # Standard errors are close to the Monte Carlo standard deviation
+    ests = [arfima_mle_est(arfima_exact_gen(300, 0.3, [], [0.4]), 0, 1; se = true) for _ in 1:100]
+    @test smean(getindex.(ests, 5)) ≈ sstd(getindex.(ests, 1); k = 1) rtol = 0.25
+    @test smean([e[7][1] for e in ests]) ≈ sstd([e[3][1] for e in ests]; k = 1) rtol = 0.25
 
     # Davies-Harte: sample autocovariances of the exact simulation
     S = zeros(2)

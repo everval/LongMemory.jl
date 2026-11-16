@@ -42,8 +42,9 @@ This is a breaking release. The main changes for users are that plotting require
 ### New Features
 
 #### Estimation and testing
-- `arfima_whittle_est`: parametric Whittle estimation of ARFIMA(p,d,q) models, imposing stationarity and invertibility.
+- `arfima_whittle_est`: parametric Whittle estimation of ARFIMA(p,d,q) models, imposing stationarity and invertibility. It and `arfima_mle_est` run Nelder-Mead with a tight tolerance (`g_tol = 1e-12`, up to 10,000 iterations), as the default tolerance stopped the Whittle optimization early, often at the boundary `d ≈ 1/2`.
 - `arfima_mle_est`, `arfima_llk`: exact maximum likelihood estimation of ARFIMA(p,d,q) models (Sowell, 1992), with the likelihood evaluated by the Durbin-Levinson algorithm.
+- Standard errors for the parametric estimators: `fi_mle_est`, `csa_mle_est`, `arfima_mle_est` and `arfima_whittle_est` return them with the keyword `se = true`, appended to the usual output (e.g. `d, σ, se_d, se_σ = fi_mle_est(x; se = true)`). They come from the numerical Hessian of the (concentrated) log-likelihood at the optimum, mapped to the model parameters with the delta method; they are `NaN`, with a warning, if the estimates are on the boundary of the parameter space or the Hessian is not positive definite. `har_est(x; se = true)` also returns the (classical OLS) standard errors of `β`. The default output is unchanged.
 - `arfima_var_vals`, `arfima_cor_vals`, `arfima_var_matrix`: autocovariances, autocorrelations and autocovariance matrix of the stationary ARFIMA(p,d,q) process, exact up to rounding error, also for repeated or complex AR roots.
 - `feasible_exact_whittle_est`: the feasible exact local Whittle estimator of Shimotsu (2010) for series with unknown mean, valid also for `d > 1/2`.
 - `durbin_levinson`: one-step predictions and prediction error variances of a stationary series. `fi_llk`, `csa_llk`, `fi_mle_est` and `csa_mle_est` now use it, so the likelihood costs `O(T²)` instead of `O(T³)`, with the same values (e.g. `fi_mle_est` with `T = 2000` takes 0.06 s instead of 1.2 s).

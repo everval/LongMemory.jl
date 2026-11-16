@@ -108,5 +108,3 @@ Some of these fixes change numerical output.
 
 #### Documentation
 - Fixed docstring examples that did not run or used invalid parameters (e.g. `csa_var_vals` with `q < 1`). A test now runs every docstring example.
-
-
