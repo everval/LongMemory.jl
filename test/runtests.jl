@@ -451,9 +451,11 @@ end
     @test csa_mle_est(c) == csa_mle_est(c)
     @test abs(csa_mle_est(c)[3] - 2.0) < 0.25
 
-    # Short memory tests reject under long memory
-    @test lo_rs_test(fi_exact_gen(4000, 0.4))[2] < 0.05
-    @test vs_test(fi_exact_gen(4000, 0.4))[2] < 0.05
+    # Short memory tests reject under long memory. Their power is about 0.9 for d = 0.4 and T = 4000, so a single draw
+    # fails for about 1 in 10 random streams (e.g. Julia 1.10). The rejection rate over 50 draws is about 0.9 ± 0.04.
+    xs = [fi_exact_gen(4000, 0.4) for _ in 1:50]
+    @test count(x -> lo_rs_test(x)[2] < 0.05, xs) / 50 > 0.7
+    @test count(x -> vs_test(x)[2] < 0.05, xs) / 50 > 0.7
 end
 
 # Every `julia> ...` line in the docstrings of the exported functions must run.
