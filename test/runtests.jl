@@ -88,6 +88,20 @@ end
     @test hitransform([1, 1, 1]) ≈ [1; 1-1/2; 1-1/2-1/12]
     @test hitransform([2.0]) == [2.0]
     @test gregory_coeffs(4)[4] ≈ 19/720
+    @test gregory_coeffs(5) ≈ [1/2; 1/12; 1/24; 19/720; 3/160]
+    @test gregory_coeffs(0) == Float64[]
+    @test_throws ArgumentError gregory_coeffs(-1)
+    # precomputed coefficients give exactly the same output, and the input is not mutated
+    for n in (1, 2, 3, 7, 64, 100, 257, 1000, 1023)
+        xg = randn(n)
+        xg0 = copy(xg)
+        @test hitransform(copy(xg)) == hitransform(copy(xg); coefs = gregory_coeffs(n - 1))
+        @test hitransform(xg) == hitransform(xg; coefs = gregory_coeffs(n - 1))
+        @test xg == xg0
+    end
+    @test_throws ArgumentError hitransform(randn(10); coefs = gregory_coeffs(10))
+    @test_throws ArgumentError hitransform(randn(10); coefs = gregory_coeffs(8))
+    @test_throws ArgumentError hitransform([2.0]; coefs = [0.5])
     @test fi_forecast(ones(10), 1, 0)[11] ≈ 1.0 # the sample mean is added back
     @test fi_forecast(ones(10), 1, 0, 1)[11] ≈ 1.0
     @test fi_forecast([1.0; -1.0], 1, 0.4)[3] ≈ 0.4 * (-1.0) + 0.4 * 0.6 / 2 * 1.0

@@ -826,24 +826,26 @@ end
 Computes the absolute values of the Gregory coefficients, `|G_n|` for `n = 1, ..., N`, used in the harmonic inverse transformation.
 
 # Arguments
-- `N::Int`: The number of coefficients to compute.
+- `N::Int`: The number of coefficients to compute. `N = 0` returns an empty vector.
 
 # Output
-- `coefs::Array`: The Gregory coefficients.
+- `coefs::Vector`: The Gregory coefficients.
 
 # Notes
-The first coefficient is 1/2 and the rest are computed using the recursive formula. The zero lag coefficient is not computed, it is theoretically 1.
+The first coefficient is 1/2 and the rest are computed using the recursive formula, at a cost of O(N²) operations.
+The zero lag coefficient is not computed, it is theoretically 1.
 The inverse of the harmonically weighted filter is `1 - Σ_{n≥1} |G_n| Lⁿ`.
 
 # Examples
 ```julia
-julia> gregory_coeffs(5)
+julia> gregory_coeffs(5) # [1/2, 1/12, 1/24, 19/720, 3/160]
 ```
 """
 function gregory_coeffs(N::Int)
+    N >= 0 || throw(ArgumentError("N must be non-negative, got N = $N"))
+
     coefs = zeros(N)
 
-    coefs[1] = 1/2
     for jj = 1:N
         gs = 0
         for ii = 1:(jj-1)
@@ -856,35 +858,46 @@ function gregory_coeffs(N::Int)
 end
 
 """
-    hitransform(x::AbstractArray)
+    hitransform(x::AbstractArray; coefs = gregory_coeffs(length(x) - 1))
 
 Computes the harmonic inverse transformation of a time series. For more details see Hassler and Hosseinkouchack (2020).
 
 # Arguments
-- `x::Array`: The time series.
+- `x::AbstractArray`: The time series of length `T`.
+
+# Optional arguments
+- `coefs::AbstractVector`: Precomputed Gregory coefficients `gregory_coeffs(T - 1)`. It must have length `T - 1`, otherwise an
+  `ArgumentError` is thrown. Pass it to avoid recomputing the coefficients when filtering many series of the same length.
 
 # Output
-- `result::Array`: The time series after the harmonic inverse transformation (new array, input not mutated).
+- `result::Vector`: The time series after the harmonic inverse transformation. This is a new vector, the input `x` is not mutated.
 
 # Notes
-The harmonic inverse transformation is computed using the FFT.
+The cost is O(T²) to compute the Gregory coefficients plus O(T log T) to apply the filter with the FFT.
+Passing `coefs` skips the first step, so filtering many series of the same length costs O(T log T) per series.
 
 # Examples
 ```julia
 julia> hitransform(fi_gen(100,0.2))
+
+julia> coefs = gregory_coeffs(99); # computed once
+
+julia> ys = [hitransform(fi_gen(100, 0.2); coefs = coefs) for _ in 1:1000];
 ```
 """
-function hitransform(x::AbstractArray)
+function hitransform(x::AbstractArray; coefs::AbstractVector = gregory_coeffs(max(length(x) - 1, 0)))
 
     T = length(x)-1
+
+    if length(coefs) != max(T, 0)
+        throw(ArgumentError("coefs must have length length(x) - 1 = $(max(T, 0)), got $(length(coefs))"))
+    end
 
     if T < 1
         return float.(vec(x))
     end
 
     np2 = nextpow(2, 2 * T - 1)
-
-    coefs = gregory_coeffs(T)
 
     padcoefs = [coefs; zeros(np2 - T, 1)]
     padx = [x[1:T]; zeros(np2 - T, 1)]
